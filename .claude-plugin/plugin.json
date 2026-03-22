@@ -1,0 +1,12 @@
+{
+  "name": "cc-context-skills",
+  "description": "Learn Claude Code's context engineering patterns and apply them to your own agent projects. Capture API traces, extract patterns, and generate migration plans.",
+  "version": "1.0.0",
+  "author": {
+    "name": "claude89757"
+  },
+  "homepage": "https://github.com/claude89757/claude-code-context-skills",
+  "repository": "https://github.com/claude89757/claude-code-context-skills",
+  "license": "MIT",
+  "skills": "./skills/"
+}
