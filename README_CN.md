@@ -35,20 +35,25 @@ cc-trace  →  cc-learn  →  cc-apply  →  cc-verify
 
 ## 安装
 
-### 从插件市场安装（注册后）
+### 从 GitHub 安装（推荐）
 
+```bash
+# 添加 marketplace
+/plugin marketplace add claude89757/claude-code-context-skills
+
+# 安装插件
+/plugin install cc-context-skills@cc-context-skills
 ```
-claude plugin install cc-context-skills
+
+### 从本地目录安装
+
+```bash
+# 将本地 clone 的仓库添加为 marketplace
+/plugin marketplace add /path/to/cc-context-skills
+
+# 安装插件
+/plugin install cc-context-skills@cc-context-skills
 ```
-
-### 从 GitHub 安装
-
-1. Clone 本仓库
-2. 添加为本地 marketplace：
-   ```bash
-   claude plugin marketplace add /path/to/claude-code-context-skills
-   claude plugin install cc-context-skills
-   ```
 
 ### 前置依赖
 

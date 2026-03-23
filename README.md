@@ -35,20 +35,25 @@ Each skill works independently. Use them together for a full learning loop, or i
 
 ## Installation
 
-### From Plugin Marketplace (once registered)
+### From GitHub (recommended)
 
+```bash
+# Add the marketplace
+/plugin marketplace add claude89757/claude-code-context-skills
+
+# Install the plugin
+/plugin install cc-context-skills@cc-context-skills
 ```
-claude plugin install cc-context-skills
+
+### From Local Directory
+
+```bash
+# Add a locally cloned copy as marketplace
+/plugin marketplace add /path/to/cc-context-skills
+
+# Install the plugin
+/plugin install cc-context-skills@cc-context-skills
 ```
-
-### From GitHub
-
-1. Clone this repo
-2. Add it as a local marketplace:
-   ```bash
-   claude plugin marketplace add /path/to/claude-code-context-skills
-   claude plugin install cc-context-skills
-   ```
 
 ### Prerequisites
 

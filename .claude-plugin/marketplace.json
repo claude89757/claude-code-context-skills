@@ -1,0 +1,23 @@
+{
+  "name": "claude-code-context-skills",
+  "owner": {
+    "name": "claude89757"
+  },
+  "metadata": {
+    "description": "Learn Claude Code's context engineering patterns and apply them to your own agent projects."
+  },
+  "plugins": [
+    {
+      "name": "cc-context-skills",
+      "source": "./",
+      "description": "Capture Claude Code API traces, extract context engineering patterns, analyze gaps, and verify migrations.",
+      "version": "1.0.0",
+      "author": {
+        "name": "claude89757"
+      },
+      "homepage": "https://github.com/claude89757/claude-code-context-skills",
+      "repository": "https://github.com/claude89757/claude-code-context-skills",
+      "license": "MIT"
+    }
+  ]
+}
