@@ -11,14 +11,14 @@ This skill closes the feedback loop: `cc-trace → cc-learn → cc-apply → cc-
 
 ## Prerequisites
 
-1. A `docs/cc-patterns/` knowledge base must exist (created by `/cc-learn`)
+1. A `docs/cc-context/patterns/` knowledge base must exist (created by `/cc-learn`)
 2. The target project must have a way to capture its API traces
 
 ## Workflow
 
 ### Step 1: Locate knowledge base
 
-Use Glob to find `docs/cc-patterns/*.md`. If the user specifies a custom path, use that.
+Use Glob to find `docs/cc-context/patterns/*.md`. If the user specifies a custom path, use that.
 
 If not found, tell the user to run `/cc-learn` first.
 
@@ -106,13 +106,13 @@ For each pattern, assess against specific observable criteria:
 
 ### Step 5: Generate Verification Report
 
-Write to `docs/YYYY-MM-DD-cc-verification-report.md` (use today's date). Create `docs/` if needed.
+Write to `docs/cc-context/YYYY-MM-DD-verification-report.md` (use today's date). Create `docs/` if needed.
 
 ```markdown
 # CC Verification Report
 
 Generated: YYYY-MM-DD
-Knowledge base: docs/cc-patterns/
+Knowledge base: docs/cc-context/patterns/
 Trace source: <file path or capture method>
 Requests analyzed: N
 
@@ -157,7 +157,7 @@ Patterns that could not be verified — may need additional test scenarios:
 
 ### Step 6: Comparison with cc-apply migration plan
 
-Use Glob to find the latest `docs/*-cc-migration-plan.md` (from a previous `/cc-learn` run). If found, compare:
+Use Glob to find the latest `docs/cc-context/*-migration-plan.md` (from a previous `/cc-learn` run). If found, compare:
 
 - Items marked as completed in the migration plan but **NOT** confirmed at runtime → **false positive** (cc-apply execution issue)
 - Items confirmed at runtime but **NOT** in the migration plan → project already implemented these patterns independently (no action needed)
@@ -173,7 +173,7 @@ CC Verify complete!
   Partial/Diverged:      Y patterns
   Not observed:          Z patterns
   Behavioral alignment:  XX%
-  Report:                docs/YYYY-MM-DD-cc-verification-report.md
+  Report:                docs/cc-context/YYYY-MM-DD-verification-report.md
 ```
 
 If there are partial/diverged patterns, suggest: "先运行 `/cc-learn` 更新方案，再运行 `/cc-apply` 重新执行".

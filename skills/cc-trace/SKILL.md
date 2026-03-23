@@ -117,7 +117,7 @@ claude-trace --generate-html FILE.jsonl
 ### 存储结构
 
 ```
-docs/cc-traces/
+docs/cc-context/traces/
 └── YYYY-MM-DD-v<version>/
     ├── trace.jsonl      # 原始 trace 数据
     └── metadata.json    # 抓取元信息

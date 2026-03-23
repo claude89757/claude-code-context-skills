@@ -13,7 +13,7 @@ Claude Code 是一个生产级 AI 编程智能体，拥有精密的上下文工�
 | Skill | 用途 |
 |-------|------|
 | **cc-trace** | 使用 [claude-trace](https://www.npmjs.com/package/@mariozechner/claude-trace) 抓取 Claude Code 的真实 API 请求，保存原始 trace 数据供分析。 |
-| **cc-learn** | 从原始 trace 中提取模式，通过协作式对话对比你的项目代码，生成详细的改造方案（`docs/YYYY-MM-DD-cc-migration-plan.md`）。 |
+| **cc-learn** | 从原始 trace 中提取模式，通过协作式对话对比你的项目代码，生成详细的改造方案（`docs/cc-context/YYYY-MM-DD-migration-plan.md`）。 |
 | **cc-apply** | 按改造方案逐项执行代码修改，每步完成后向用户确认。 |
 | **cc-verify** | 捕获你项目的运行时 API trace，验证迁移的模式是否真正生效——而不仅仅是代码中存在。 |
 
@@ -70,7 +70,7 @@ cc-trace  →  cc-learn  →  cc-apply  →  cc-verify
 /cc-trace
 ```
 
-抓取最新版 Claude Code 的真实 API 请求，保存原始 trace 数据到 `docs/cc-traces/`。
+抓取最新版 Claude Code 的真实 API 请求，保存原始 trace 数据到 `docs/cc-context/traces/`。
 
 ### 2. 分析并制定改造方案
 
@@ -78,7 +78,7 @@ cc-trace  →  cc-learn  →  cc-apply  →  cc-verify
 /cc-learn
 ```
 
-从 trace 中提取模式，通过协作式对话对比你的项目代码，生成改造方案（`docs/YYYY-MM-DD-cc-migration-plan.md`）：
+从 trace 中提取模式，通过协作式对话对比你的项目代码，生成改造方案（`docs/cc-context/YYYY-MM-DD-migration-plan.md`）：
 - 对齐分数
 - 按优先级排列的 gap 项（HIGH / MED / LOW）
 - 带文件引用的具体改造步骤

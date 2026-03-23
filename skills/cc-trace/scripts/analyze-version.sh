@@ -77,7 +77,7 @@ fi
 # Save to project directory if specified (PROJECT_DIR must be captured before exec in caller)
 PROJECT_DIR="${2:-}"
 if [ -n "$PROJECT_DIR" ] && [ -n "$TRACE_FILE" ] && [ -s "$TRACE_FILE" ]; then
-  SAVE_DIR="$PROJECT_DIR/docs/cc-traces/$(date +%Y-%m-%d)-v${VERSION}"
+  SAVE_DIR="$PROJECT_DIR/docs/cc-context/traces/$(date +%Y-%m-%d)-v${VERSION}"
   mkdir -p "$SAVE_DIR"
   cp "$TRACE_FILE" "$SAVE_DIR/trace.jsonl"
   SAVE_LINES=$(wc -l < "$TRACE_FILE" | tr -d ' ')

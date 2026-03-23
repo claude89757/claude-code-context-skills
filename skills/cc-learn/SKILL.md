@@ -15,14 +15,14 @@ description: "从 Claude Code trace 数据中提取 context engineering 模式�
 
 你必须为以下每个步骤创建 task 并按序完成：
 
-1. **[Phase 1] 加载 trace 数据** — 读取 docs/cc-traces/ 中的原始 JSONL
+1. **[Phase 1] 加载 trace 数据** — 读取 docs/cc-context/traces/ 中的原始 JSONL
 2. **[Phase 1] 提取 CC 模式** — 用 jq 分析 trace，提取模式写入知识库
 3. **[Phase 2] 探索项目上下文** — 扫描当前项目的 agent 相关代码
 4. **[Phase 2] 提问澄清** — 一次一个问题，了解项目架构意图、约束、优先级
 5. **[Phase 3] 逐项对比** — CC 模式 vs 项目现状，标记状态
 6. **[Phase 4] 提出 2-3 种改造方向** — 带权衡分析和推荐
 7. **[Phase 4] 呈现改造方案** — 分段展示，每段确认后再继续
-8. **[Phase 4] 写方案文档** — 保存到 docs/YYYY-MM-DD-cc-migration-plan.md
+8. **[Phase 4] 写方案文档** — 保存到 docs/cc-context/YYYY-MM-DD-migration-plan.md
 9. **[Phase 4] 用户审核** — 确认后才建议运行 /cc-apply
 
 ## 流程图
@@ -67,7 +67,7 @@ digraph cc_learn {
 
 读取 cc-trace 保存的原始数据（按优先级）：
 
-1. `docs/cc-traces/` 目录中的 JSONL 文件（用 Glob 找最新的）
+1. `docs/cc-context/traces/` 目录中的 JSONL 文件（用 Glob 找最新的）
 2. 用户指定的 JSONL 文件路径
 3. 用户粘贴的原始 trace 数据
 
@@ -93,7 +93,7 @@ LLM='select(.request.url | test("v1/messages"))'
 
 ### 知识库
 
-提取的模式写入 `docs/cc-patterns/` 知识库，按主题组织：
+提取的模式写入 `docs/cc-context/patterns/` 知识库，按主题组织：
 
 | 文件 | 主题 |
 |------|------|
@@ -134,7 +134,7 @@ LLM='select(.request.url | test("v1/messages"))'
   新增模式:     X
   更新模式:     Y
   未变化:       Z
-  知识库:       docs/cc-patterns/
+  知识库:       docs/cc-context/patterns/
 ```
 
 分类参考见 [references/pattern-taxonomy.md](references/pattern-taxonomy.md)。
@@ -225,13 +225,13 @@ LLM='select(.request.url | test("v1/messages"))'
 
 ### 写方案文档
 
-所有段确认后，写入 `docs/YYYY-MM-DD-cc-migration-plan.md`（日期时间戳放前面，方便归档排序）：
+所有段确认后，写入 `docs/cc-context/YYYY-MM-DD-migration-plan.md`（日期时间戳放前面，方便归档排序）：
 
 ```markdown
 # CC Migration Plan
 
 生成时间: YYYY-MM-DD
-知识库: docs/cc-patterns/
+知识库: docs/cc-context/patterns/
 目标项目: <project root>
 
 ## 总览
@@ -279,7 +279,7 @@ LLM='select(.request.url | test("v1/messages"))'
 
 文档写完后提示：
 
-> 方案已保存到 `docs/YYYY-MM-DD-cc-migration-plan.md`。请审核方案内容，确认后运行 `/cc-apply` 开始执行改造。
+> 方案已保存到 `docs/cc-context/YYYY-MM-DD-migration-plan.md`。请审核方案内容，确认后运行 `/cc-apply` 开始执行改造。
 
 等待用户确认。如果需要修改，更新文档。
 

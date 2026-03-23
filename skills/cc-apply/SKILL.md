@@ -9,10 +9,10 @@ description: "按 cc-learn 生成的改造方案执行代码改造。读取最�
 
 ## 前置条件
 
-`docs/*-cc-migration-plan.md` 必须存在（由 `/cc-learn` 生成）。用 Glob 找最新的：
+`docs/cc-context/*-migration-plan.md` 必须存在（由 `/cc-learn` 生成）。用 Glob 找最新的：
 
 ```
-docs/*-cc-migration-plan.md
+docs/cc-context/*-migration-plan.md
 ```
 
 如果不存在，告诉用户先运行 `/cc-learn`。
@@ -21,7 +21,7 @@ docs/*-cc-migration-plan.md
 
 ### Step 1: 加载改造方案
 
-用 Glob 找到最新的 `docs/*-cc-migration-plan.md`，读取并提取所有改造项。每个改造项应包含：
+用 Glob 找到最新的 `docs/cc-context/*-migration-plan.md`，读取并提取所有改造项。每个改造项应包含：
 - 对应 CC 模式
 - 当前状态（partial / missing）
 - 目标实现

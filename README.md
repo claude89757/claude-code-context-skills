@@ -13,7 +13,7 @@ Claude Code is a production-grade AI coding agent with sophisticated context eng
 | Skill | Purpose |
 |-------|---------|
 | **cc-trace** | Capture Claude Code's real API requests using [claude-trace](https://www.npmjs.com/package/@mariozechner/claude-trace) and store raw trace data for analysis. |
-| **cc-learn** | Extract patterns from raw traces, compare with your project code through collaborative dialogue, and produce a detailed migration plan (`docs/YYYY-MM-DD-cc-migration-plan.md`). |
+| **cc-learn** | Extract patterns from raw traces, compare with your project code through collaborative dialogue, and produce a detailed migration plan (`docs/cc-context/YYYY-MM-DD-migration-plan.md`). |
 | **cc-apply** | Execute the migration plan step by step, modifying your project code with confirmation at each step. |
 | **cc-verify** | Capture your project's runtime API traces and verify that migrated patterns are actually working — not just present in code. |
 
@@ -70,7 +70,7 @@ Each skill works independently. Use them together for a full learning loop, or i
 /cc-trace
 ```
 
-This captures a real API request from the latest Claude Code version and saves raw trace data to `docs/cc-traces/`.
+This captures a real API request from the latest Claude Code version and saves raw trace data to `docs/cc-context/traces/`.
 
 ### 2. Analyze and plan migration
 
@@ -78,7 +78,7 @@ This captures a real API request from the latest Claude Code version and saves r
 /cc-learn
 ```
 
-Extracts patterns from traces, compares with your project code through collaborative dialogue, and generates a migration plan (`docs/YYYY-MM-DD-cc-migration-plan.md`) with:
+Extracts patterns from traces, compares with your project code through collaborative dialogue, and generates a migration plan (`docs/cc-context/YYYY-MM-DD-migration-plan.md`) with:
 - Alignment score
 - Prioritized gaps (HIGH / MED / LOW)
 - Concrete migration steps with file references
