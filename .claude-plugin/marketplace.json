@@ -11,13 +11,8 @@
       "name": "cc-context-skills",
       "source": "./",
       "description": "Capture Claude Code API traces, collaboratively analyze gaps, and execute migration plans.",
-      "version": "2.1.0",
-      "author": {
-        "name": "claude89757"
-      },
-      "homepage": "https://github.com/claude89757/claude-code-context-skills",
-      "repository": "https://github.com/claude89757/claude-code-context-skills",
-      "license": "MIT"
+      "category": "development",
+      "homepage": "https://github.com/claude89757/claude-code-context-skills"
     }
   ]
 }
