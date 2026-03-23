@@ -11,6 +11,13 @@ This skill closes the feedback loop: `cc-trace → cc-learn → cc-apply → cc-
 
 For data path and format conventions, see [../../data-contracts.md](../../data-contracts.md).
 
+<OUTPUT-BOUNDARY>
+This skill writes to `docs/cc-context/reports/` (verification reports).
+It also writes back to `docs/cc-context/plans/*-migration-plan.md` (⚠️ markers and status: completed→verified only).
+It does NOT modify project source code.
+It does NOT modify `docs/cc-context/knowledge/` — if patterns need updating based on verification results, tell the user to re-run /cc-learn.
+</OUTPUT-BOUNDARY>
+
 ## Prerequisites
 
 1. A `docs/cc-context/knowledge/patterns/` knowledge base must exist (created by `/cc-learn`)

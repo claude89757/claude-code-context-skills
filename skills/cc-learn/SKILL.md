@@ -13,6 +13,25 @@ For data path and format conventions, see [../../data-contracts.md](../../data-c
 Do not suggest running /cc-apply until the migration plan is confirmed by the user. Each phase's output must be confirmed by the user before proceeding to the next phase.
 </HARD-GATE>
 
+<OUTPUT-BOUNDARY>
+This skill ONLY writes to `docs/cc-context/knowledge/` and `docs/cc-context/plans/`.
+It NEVER writes to `docs/cc-context/traces/`, `docs/cc-context/reports/`, or any other directory.
+It NEVER modifies project source code, configuration files, or any files outside `docs/cc-context/`.
+All project code changes are deferred to /cc-apply.
+Reading project files for analysis is allowed; writing or editing them is NOT.
+</OUTPUT-BOUNDARY>
+
+<PHASE-GATE>
+You MUST wait for explicit user confirmation before crossing phase boundaries:
+- Phase 1 → Phase 2: Show extraction summary, wait for user to confirm before scanning project code
+- Phase 2 → Phase 3: Show project scan results and clarifying Q&A summary, wait for user to confirm before starting comparison
+- Phase 3 → Phase 4: Show comparison table, wait for user to confirm before proposing directions
+- Phase 4 → Phase 5: User must select a direction before plan development begins
+- Phase 5 (plan written) → suggest /cc-apply: Do NOT suggest /cc-apply until the user explicitly approves the plan and you have updated status from draft to confirmed
+
+If you find yourself writing code that would be executed by the project (not documentation), STOP. You are in the wrong skill. Tell the user to run /cc-apply.
+</PHASE-GATE>
+
 ## Checklist
 
 You must create a task for each of the following steps and complete them in order:
@@ -66,7 +85,7 @@ digraph cc_learn {
 }
 ```
 
-**The terminal state is suggesting /cc-apply.** Do not start modifying code directly.
+**The terminal state is suggesting /cc-apply.** Do not start modifying code directly. If you reach this point and the user has not confirmed the plan, do not proceed.
 
 ## Phase 1: Load, Extract Patterns, and Extract Examples
 

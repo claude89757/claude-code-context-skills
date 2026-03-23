@@ -13,6 +13,12 @@ All `scripts/` paths below are relative to this skill's directory.
 
 For data path and format conventions, see [../../data-contracts.md](../../data-contracts.md).
 
+<OUTPUT-BOUNDARY>
+This skill ONLY writes to `docs/cc-context/traces/`.
+It does NOT write to `docs/cc-context/knowledge/`, `docs/cc-context/plans/`, or `docs/cc-context/reports/`.
+It does NOT modify project source code.
+</OUTPUT-BOUNDARY>
+
 ## Prerequisites Check
 
 Run before any capture:

@@ -45,6 +45,27 @@ cc-trace ──→ traces/*/trace.jsonl ──→ cc-learn ──→ knowledge/p
                                                           └──→ write back to plans/ (⚠️ marks)
 ```
 
+## Write Permissions
+
+Each skill has explicit write boundaries. **A skill MUST NOT write to directories outside its permissions.**
+
+| Directory | cc-trace | cc-learn | cc-apply | cc-verify |
+|-----------|----------|----------|----------|-----------|
+| `traces/` | **WRITE** | read | — | — |
+| `knowledge/patterns/` | — | **WRITE** | read | read |
+| `knowledge/examples/` | — | **WRITE** | read | read |
+| `plans/` | — | **WRITE** (create, status: draft→confirmed) | **UPDATE** (status, ✅⏭️ markers) | **UPDATE** (⚠️ markers, status: completed→verified) |
+| `reports/` | — | — | — | **WRITE** |
+| Project files* | — | read only | **WRITE** (per plan items) | read only |
+
+\* *Project files = all files outside `docs/cc-context/` — source code, configuration files, build files, etc.*
+
+**Key constraints:**
+- cc-learn reads project source code for analysis but NEVER modifies it
+- cc-apply only modifies project files listed in a migration item's "Affected files"
+- cc-verify never modifies project source code; if fixes are needed, it directs the user back to cc-learn → cc-apply
+- Only cc-learn creates new migration plans; cc-apply and cc-verify update existing ones
+
 ## Migration Plan Status
 
 The migration-plan.md must include a status line near the top of the document:
