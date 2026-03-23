@@ -10,8 +10,8 @@
     {
       "name": "cc-context-skills",
       "source": "./",
-      "description": "Capture Claude Code API traces, extract context engineering patterns, analyze gaps, and verify migrations.",
-      "version": "1.0.0",
+      "description": "Capture Claude Code API traces, collaboratively analyze gaps, and execute migration plans.",
+      "version": "2.1.0",
       "author": {
         "name": "claude89757"
       },
