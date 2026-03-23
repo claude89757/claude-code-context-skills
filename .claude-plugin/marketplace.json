@@ -9,6 +9,7 @@
   "plugins": [
     {
       "name": "cc-context-skills",
+      "version": "2.4.0",
       "source": "./",
       "description": "Capture Claude Code API traces, collaboratively analyze gaps, and execute migration plans.",
       "category": "development",
