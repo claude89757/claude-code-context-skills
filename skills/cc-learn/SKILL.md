@@ -7,7 +7,7 @@ description: "Extract context engineering patterns and raw examples from Claude 
 
 Extract Claude Code's context engineering patterns and raw reference examples from trace data captured by cc-trace, compare them against the current project's implementation, and collaboratively develop a migration plan with the user through interactive dialogue.
 
-For data path and format conventions, see [../shared/data-contracts.md](../shared/data-contracts.md).
+For data path and format conventions, see [../../data-contracts.md](../../data-contracts.md).
 
 <HARD-GATE>
 Do not suggest running /cc-apply until the migration plan is confirmed by the user. Each phase's output must be confirmed by the user before proceeding to the next phase.
@@ -82,7 +82,7 @@ If no input is found, tell the user to run `/cc-trace` first.
 
 ### Analysis Commands
 
-Use jq to extract key information from JSONL. For jq command reference, see [../shared/trace-inspection.md](../shared/trace-inspection.md).
+Use jq to extract key information from JSONL. For jq command reference, see [../cc-trace/references/trace-inspection.md](../cc-trace/references/trace-inspection.md).
 
 Extract for each category (use the LLM filter and jq commands from the trace inspection reference):
 

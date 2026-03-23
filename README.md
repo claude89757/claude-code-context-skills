@@ -129,9 +129,7 @@ skills/
   cc-verify/               # Runtime verification
     SKILL.md
     references/            # Verification criteria
-  shared/                  # Cross-skill references
-    data-contracts.md      # Inter-skill data paths & format conventions
-    trace-inspection.md    # Shared jq inspection commands
+data-contracts.md          # Inter-skill data paths & format conventions
 ```
 
 ## License

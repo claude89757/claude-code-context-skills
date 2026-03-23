@@ -11,7 +11,7 @@ Use `claude-trace` (`@mariozechner/claude-trace`) to capture the exact API reque
 
 All `scripts/` paths below are relative to this skill's directory.
 
-For data path and format conventions, see [../shared/data-contracts.md](../shared/data-contracts.md).
+For data path and format conventions, see [../../data-contracts.md](../../data-contracts.md).
 
 ## Prerequisites Check
 
@@ -72,7 +72,7 @@ docs/cc-context/traces/
 
 ## Quick Check (Optional)
 
-After capture, you can use jq to quickly verify data integrity. See [../shared/trace-inspection.md](../shared/trace-inspection.md) for commands.
+After capture, you can use jq to quickly verify data integrity. See [references/trace-inspection.md](references/trace-inspection.md) for commands.
 
 ## Next Step
 

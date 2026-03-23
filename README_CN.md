@@ -129,9 +129,7 @@ skills/
   cc-verify/               # 运行时验证
     SKILL.md
     references/            # 验证标准
-  shared/                  # 跨 skill 共享资源
-    data-contracts.md      # skill 间数据路径与格式约定
-    trace-inspection.md    # 共享 jq 检查命令
+data-contracts.md          # skill 间数据路径与格式约定
 ```
 
 ## 许可证

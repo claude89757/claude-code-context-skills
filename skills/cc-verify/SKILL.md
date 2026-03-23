@@ -9,7 +9,7 @@ Capture your agent project's runtime API traces and compare them against the cc-
 
 This skill closes the feedback loop: `cc-trace → cc-learn → cc-apply → cc-verify`.
 
-For data path and format conventions, see [../shared/data-contracts.md](../shared/data-contracts.md).
+For data path and format conventions, see [../../data-contracts.md](../../data-contracts.md).
 
 ## Prerequisites
 
