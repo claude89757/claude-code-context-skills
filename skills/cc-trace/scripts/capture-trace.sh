@@ -15,7 +15,7 @@ fi
 
 echo "=== Capturing trace for Claude Code v${LATEST_VER} ==="
 
-# Delegate to analyze-version.sh
+# Delegate to analyze-version.sh with project dir and prompt
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(pwd)"
-exec bash "$SCRIPT_DIR/analyze-version.sh" "$LATEST_VER" "$PROJECT_DIR"
+exec bash "$SCRIPT_DIR/analyze-version.sh" "$LATEST_VER" "$PROJECT_DIR" "$PROMPT"

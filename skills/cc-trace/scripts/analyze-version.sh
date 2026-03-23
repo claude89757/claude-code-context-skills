@@ -1,9 +1,17 @@
 #!/usr/bin/env bash
-# Usage: ./analyze-version.sh <version>
-# Example: ./analyze-version.sh $(npm view @anthropic-ai/claude-code version)
+# Usage: ./analyze-version.sh <version> [project_dir] [prompt]
+# Example: ./analyze-version.sh 1.0.0
+# Example: ./analyze-version.sh 1.0.0 /path/to/project "what tools do you have"
+#
+# Arguments:
+#   version      - Claude Code version to analyze (required)
+#   project_dir  - Project directory for saving traces (optional, saves to docs/cc-context/traces/)
+#   prompt       - Prompt to send to Claude Code (optional, defaults to "hello")
 set -euo pipefail
 
-VERSION="${1:?Usage: $0 <version>}"
+VERSION="${1:?Usage: $0 <version> [project_dir] [prompt]}"
+PROJECT_DIR="${2:-}"
+PROMPT="${3:-hello}"
 WORK_DIR=$(mktemp -d "/tmp/claude-code-${VERSION}-XXXXX")
 
 echo "=== Installing Claude Code v${VERSION} ==="
@@ -18,7 +26,7 @@ if [ ! -f "$CLAUDE_CLI" ]; then
 fi
 echo "✓ Claude Code v${VERSION} installed"
 
-echo "=== Running trace for v${VERSION} ==="
+echo "=== Running trace for v${VERSION} (prompt: \"${PROMPT}\") ==="
 LOG_NAME="v${VERSION}"
 
 # Unset CLAUDECODE env var to allow running inside a Claude Code session
@@ -30,14 +38,14 @@ if command -v claude-trace >/dev/null 2>&1; then
     --log "$LOG_NAME" \
     --no-open \
     --include-all-requests \
-    --run-with -p "hello" 2>&1 || true
+    --run-with -p "$PROMPT" 2>&1 || true
 else
   cd "$WORK_DIR" && npx --yes @mariozechner/claude-trace \
     --claude-path "$CLAUDE_CLI" \
     --log "$LOG_NAME" \
     --no-open \
     --include-all-requests \
-    --run-with -p "hello" 2>&1 || true
+    --run-with -p "$PROMPT" 2>&1 || true
 fi
 
 # Find the trace file (claude-trace writes to .claude-trace/ in cwd)
@@ -74,8 +82,7 @@ else
   echo "  Try manually: cd $WORK_DIR && claude-trace --claude-path $CLAUDE_CLI --run-with -p hello"
 fi
 
-# Save to project directory if specified (PROJECT_DIR must be captured before exec in caller)
-PROJECT_DIR="${2:-}"
+# Save to project directory if specified
 if [ -n "$PROJECT_DIR" ] && [ -n "$TRACE_FILE" ] && [ -s "$TRACE_FILE" ]; then
   SAVE_DIR="$PROJECT_DIR/docs/cc-context/traces/$(date +%Y-%m-%d)-v${VERSION}"
   mkdir -p "$SAVE_DIR"
@@ -88,10 +95,14 @@ if [ -n "$PROJECT_DIR" ] && [ -n "$TRACE_FILE" ] && [ -s "$TRACE_FILE" ]; then
   "capture_date": "$(date +%Y-%m-%d)",
   "request_count": ${SAVE_LINES:-0},
   "llm_request_count": ${LLM_COUNT:-0},
-  "prompt_used": "hello"
+  "prompt_used": "$PROMPT"
 }
 METAEOF
   echo "✓ Saved to $SAVE_DIR"
+elif [ -z "$PROJECT_DIR" ] && [ -n "$TRACE_FILE" ] && [ -s "$TRACE_FILE" ]; then
+  echo ""
+  echo "Note: Trace not saved to project directory. Pass project dir as second argument to save:"
+  echo "  bash scripts/analyze-version.sh $VERSION /path/to/project"
 fi
 
 echo ""

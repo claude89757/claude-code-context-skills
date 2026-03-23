@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-# Usage: ./compare-versions.sh <version_a> <version_b>
-# Example: ./compare-versions.sh <version_a> <version_b>
+# Usage: ./compare-versions.sh <version_a> <version_b> [project_dir]
+# Example: ./compare-versions.sh 1.0.0 1.1.0
 # Prerequisites: Run analyze-version.sh for both versions first.
 set -euo pipefail
 
-VERSION_A="${1:?Usage: $0 <version_a> <version_b>}"
-VERSION_B="${2:?Usage: $0 <version_a> <version_b>}"
+VERSION_A="${1:?Usage: $0 <version_a> <version_b> [project_dir]}"
+VERSION_B="${2:?Usage: $0 <version_a> <version_b> [project_dir]}"
+PROJECT_DIR="${3:-$(pwd)}"
 
 TMPDIR_CMP=$(mktemp -d "/tmp/claude-cmp-$$-XXXX")
 trap 'rm -rf "$TMPDIR_CMP"' EXIT
@@ -15,10 +16,18 @@ LLM='select(.request.url | test("v1/messages"))'
 find_trace() {
   local version="$1"
   local found=""
-  found=$(find /tmp/claude-code-${version}-*/.claude-trace -name "*.jsonl" -size +0c 2>/dev/null | head -1)
+  # 1. Search project's saved traces (docs/cc-context/traces/)
+  if [ -d "$PROJECT_DIR/docs/cc-context/traces" ]; then
+    found=$(find "$PROJECT_DIR/docs/cc-context/traces" -path "*v${version}*" -name "*.jsonl" -size +0c 2>/dev/null | head -1)
+  fi
+  # 2. Search /tmp work directories
+  if [ -z "$found" ]; then
+    found=$(find /tmp/claude-code-${version}-*/.claude-trace -name "*.jsonl" -size +0c 2>/dev/null | head -1)
+  fi
   if [ -z "$found" ]; then
     found=$(find /tmp/claude-code-${version}-* -name "*.jsonl" -size +0c 2>/dev/null | head -1)
   fi
+  # 3. Search ~/.claude-trace
   if [ -z "$found" ]; then
     found=$(find "$HOME/.claude-trace" -name "*${version}*" -name "*.jsonl" -size +0c 2>/dev/null | head -1)
   fi
@@ -32,6 +41,11 @@ if [ -z "$TRACE_A" ] || [ -z "$TRACE_B" ]; then
   echo "✗ Missing trace files. Run analyze-version.sh for both versions first."
   [ -z "$TRACE_A" ] && echo "  Missing: v${VERSION_A}"
   [ -z "$TRACE_B" ] && echo "  Missing: v${VERSION_B}"
+  echo ""
+  echo "  Searched locations:"
+  echo "    - $PROJECT_DIR/docs/cc-context/traces/"
+  echo "    - /tmp/claude-code-<version>-*/"
+  echo "    - $HOME/.claude-trace/"
   exit 1
 fi
 
@@ -71,9 +85,9 @@ jq -c "$LLM | {thinking: .request.body.thinking, effort: .request.body.output_co
 echo ""
 echo "=== Model & Token Routing ==="
 echo "v${VERSION_A}:"
-jq -c '{model: .request.body.model, max_tokens: .request.body.max_tokens}' "$TRACE_A" | sort | uniq -c | sort -rn
+jq -c "$LLM | {model: .request.body.model, max_tokens: .request.body.max_tokens}" "$TRACE_A" | sort | uniq -c | sort -rn
 echo "v${VERSION_B}:"
-jq -c '{model: .request.body.model, max_tokens: .request.body.max_tokens}' "$TRACE_B" | sort | uniq -c | sort -rn
+jq -c "$LLM | {model: .request.body.model, max_tokens: .request.body.max_tokens}" "$TRACE_B" | sort | uniq -c | sort -rn
 
 echo ""
 echo "=== Cleanup ==="

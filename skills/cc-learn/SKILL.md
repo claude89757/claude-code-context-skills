@@ -1,296 +1,308 @@
 ---
 name: cc-learn
-description: "从 Claude Code trace 数据中提取 context engineering 模式，对比分析当前项目代码，通过协作式对话制定详细改造方案。借鉴 brainstorming 的交互模式：一次一个问题、多选优先、分段确认。"
+description: "Extract context engineering patterns from Claude Code trace data, compare them against the current project's code, and collaboratively develop a detailed migration plan through interactive dialogue. Follows a brainstorming-style interaction: one question at a time, prefer multiple-choice, confirm in segments."
 ---
 
 # CC Learn
 
-从 cc-trace 的原始抓包数据中提取 Claude Code 的 context engineering 模式，对比分析当前项目的实现，通过协作式对话与用户一起制定改造方案。
+Extract Claude Code's context engineering patterns from raw trace data captured by cc-trace, compare them against the current project's implementation, and collaboratively develop a migration plan with the user through interactive dialogue.
+
+For data path and format conventions, see [../shared/data-contracts.md](../shared/data-contracts.md).
 
 <HARD-GATE>
-改造方案未经用户确认，不得建议运行 /cc-apply。每个阶段的产出都需要用户确认后才能进入下一阶段。
+Do not suggest running /cc-apply until the migration plan is confirmed by the user. Each phase's output must be confirmed by the user before proceeding to the next phase.
 </HARD-GATE>
 
 ## Checklist
 
-你必须为以下每个步骤创建 task 并按序完成：
+You must create a task for each of the following steps and complete them in order:
 
-1. **[Phase 1] 加载 trace 数据** — 读取 docs/cc-context/traces/ 中的原始 JSONL
-2. **[Phase 1] 提取 CC 模式** — 用 jq 分析 trace，提取模式写入知识库
-3. **[Phase 2] 探索项目上下文** — 扫描当前项目的 agent 相关代码
-4. **[Phase 2] 提问澄清** — 一次一个问题，了解项目架构意图、约束、优先级
-5. **[Phase 3] 逐项对比** — CC 模式 vs 项目现状，标记状态
-6. **[Phase 4] 提出 2-3 种改造方向** — 带权衡分析和推荐
-7. **[Phase 4] 呈现改造方案** — 分段展示，每段确认后再继续
-8. **[Phase 4] 写方案文档** — 保存到 docs/cc-context/YYYY-MM-DD-migration-plan.md
-9. **[Phase 4] 用户审核** — 确认后才建议运行 /cc-apply
+1. **[Phase 1] Load trace data** — Read raw JSONL from docs/cc-context/traces/
+2. **[Phase 1] Extract CC patterns** — Analyze traces with jq, write patterns to knowledge base
+3. **[Phase 2] Explore project context** — Scan the current project's agent-related code
+4. **[Phase 2] Clarifying questions** — One question at a time, understand architecture intent, constraints, priorities
+5. **[Phase 3] Item-by-item comparison** — CC patterns vs project status, mark each pattern's state
+6. **[Phase 4] Propose 2-3 migration directions** — With trade-off analysis and recommendation
+7. **[Phase 5] Present migration plan** — Show in segments, confirm each segment before continuing
+8. **[Phase 5] Write plan document** — Save to docs/cc-context/YYYY-MM-DD-migration-plan.md, set status to draft
+9. **[Phase 5] User review** — Update status to confirmed after user approval, then suggest running /cc-apply
 
-## 流程图
+## Flowchart
 
 ```dot
 digraph cc_learn {
-    "加载 trace 数据" [shape=box];
-    "提取 CC 模式 → 知识库" [shape=box];
-    "探索项目上下文" [shape=box];
-    "提问澄清（一次一个）" [shape=box];
-    "充分了解？" [shape=diamond];
-    "逐项对比 CC vs 项目" [shape=box];
-    "提出 2-3 种改造方向" [shape=box];
-    "分段呈现改造方案" [shape=box];
-    "用户确认？" [shape=diamond];
-    "写方案文档" [shape=box];
-    "用户审核文档？" [shape=diamond];
-    "建议运行 /cc-apply" [shape=doublecircle];
+    "Load trace data" [shape=box];
+    "Extract CC patterns → knowledge base" [shape=box];
+    "Explore project context" [shape=box];
+    "Clarifying questions (one at a time)" [shape=box];
+    "Sufficient understanding?" [shape=diamond];
+    "Item-by-item comparison: CC vs project" [shape=box];
+    "Propose 2-3 migration directions" [shape=box];
+    "Present plan in segments" [shape=box];
+    "User confirms?" [shape=diamond];
+    "Write plan document (status: draft)" [shape=box];
+    "User reviews document?" [shape=diamond];
+    "Update status: confirmed" [shape=box];
+    "Suggest running /cc-apply" [shape=doublecircle];
 
-    "加载 trace 数据" -> "提取 CC 模式 → 知识库";
-    "提取 CC 模式 → 知识库" -> "探索项目上下文";
-    "探索项目上下文" -> "提问澄清（一次一个）";
-    "提问澄清（一次一个）" -> "充分了解？";
-    "充分了解？" -> "提问澄清（一次一个）" [label="否，继续问"];
-    "充分了解？" -> "逐项对比 CC vs 项目" [label="是"];
-    "逐项对比 CC vs 项目" -> "提出 2-3 种改造方向";
-    "提出 2-3 种改造方向" -> "分段呈现改造方案";
-    "分段呈现改造方案" -> "用户确认？";
-    "用户确认？" -> "分段呈现改造方案" [label="修改"];
-    "用户确认？" -> "写方案文档" [label="确认"];
-    "写方案文档" -> "用户审核文档？";
-    "用户审核文档？" -> "写方案文档" [label="需修改"];
-    "用户审核文档？" -> "建议运行 /cc-apply" [label="确认"];
+    "Load trace data" -> "Extract CC patterns → knowledge base";
+    "Extract CC patterns → knowledge base" -> "Explore project context";
+    "Explore project context" -> "Clarifying questions (one at a time)";
+    "Clarifying questions (one at a time)" -> "Sufficient understanding?";
+    "Sufficient understanding?" -> "Clarifying questions (one at a time)" [label="No, continue asking"];
+    "Sufficient understanding?" -> "Item-by-item comparison: CC vs project" [label="Yes"];
+    "Item-by-item comparison: CC vs project" -> "Propose 2-3 migration directions";
+    "Propose 2-3 migration directions" -> "Present plan in segments";
+    "Present plan in segments" -> "User confirms?";
+    "User confirms?" -> "Present plan in segments" [label="Revise"];
+    "User confirms?" -> "Write plan document (status: draft)" [label="Confirmed"];
+    "Write plan document (status: draft)" -> "User reviews document?";
+    "User reviews document?" -> "Write plan document (status: draft)" [label="Needs changes"];
+    "User reviews document?" -> "Update status: confirmed" [label="Approved"];
+    "Update status: confirmed" -> "Suggest running /cc-apply";
 }
 ```
 
-**终态是建议运行 /cc-apply。** 不得直接开始改代码。
+**The terminal state is suggesting /cc-apply.** Do not start modifying code directly.
 
-## Phase 1: 加载与提取
+## Phase 1: Load and Extract
 
-### 输入来源
+### Input Sources
 
-读取 cc-trace 保存的原始数据（按优先级）：
+Read raw data saved by cc-trace (in priority order):
 
-1. `docs/cc-context/traces/` 目录中的 JSONL 文件（用 Glob 找最新的）
-2. 用户指定的 JSONL 文件路径
-3. 用户粘贴的原始 trace 数据
+1. JSONL files in `docs/cc-context/traces/` directory (use Glob to find the latest)
+2. User-specified JSONL file path
+3. Raw trace data pasted by the user
 
-如果没有找到输入，告诉用户先运行 `/cc-trace`。
+If no input is found, tell the user to run `/cc-trace` first.
 
-### 分析命令
+### Analysis Commands
 
-使用 jq 从 JSONL 中提取关键信息（仅过滤 LLM 请求）：
+Use jq to extract key information from JSONL. For jq command reference, see [../shared/trace-inspection.md](../shared/trace-inspection.md).
 
-```bash
-LLM='select(.request.url | test("v1/messages"))'
-```
+Extract for each category (use the LLM filter and jq commands from the trace inspection reference):
 
-针对每个类别提取：
+- **System prompt architecture**: Block count, length, cache_control placement, content segmentation
+- **Tool design**: Tool names, description style, parameter schemas, deferred tools
+- **Context management**: context_management config, message growth trends
+- **Caching strategy**: cache_control placement patterns, ephemeral markers
+- **Thinking and reasoning**: thinking config, budget_tokens, effort levels
+- **Message patterns**: system-reminder injection, role distribution
+- **Model routing**: model selection, max_tokens settings
 
-- **系统提示词架构**: block 数量、长度、cache_control 位置、内容分段
-- **工具设计**: 工具名、描述风格、参数 schema、deferred tools
-- **上下文管理**: context_management 配置、消息增长趋势
-- **缓存策略**: cache_control 放置模式、ephemeral 标记
-- **思考与推理**: thinking 配置、budget_tokens、effort 级别
-- **消息模式**: system-reminder 注入、角色分布
-- **模型路由**: model 选择、max_tokens 设置
+### Knowledge Base
 
-### 知识库
+Write extracted patterns to `docs/cc-context/patterns/` knowledge base, organized by topic:
 
-提取的模式写入 `docs/cc-context/patterns/` 知识库，按主题组织：
+| File | Topic |
+|------|-------|
+| `system-prompt-design.md` | System prompt layering, block organization, cache_control placement |
+| `tool-engineering.md` | Tool definitions, naming conventions, parameter schemas, deferred tools |
+| `context-management.md` | Context compression, message trimming, context_management API |
+| `agent-orchestration.md` | Subagent patterns, Agent tool design, parallel dispatch |
+| `thinking-reasoning.md` | thinking config, budget_tokens, effort control |
+| `message-patterns.md` | system-reminder injection, role management, tool call patterns |
+| `model-routing.md` | Model selection, max_tokens settings, model switching |
 
-| 文件 | 主题 |
-|------|------|
-| `system-prompt-design.md` | 系统提示词分层、block 组织、cache_control 放置 |
-| `tool-engineering.md` | 工具定义、命名规范、参数 schema、deferred tools |
-| `context-management.md` | 上下文压缩、消息裁剪、context_management API |
-| `agent-orchestration.md` | 子 agent 模式、Agent 工具设计、并行调度 |
-| `thinking-reasoning.md` | thinking 配置、budget_tokens、effort 控制 |
-| `message-patterns.md` | system-reminder 注入、角色管理、工具调用模式 |
-| `model-routing.md` | 模型选择、max_tokens 设置、模型切换 |
+Only create a file when relevant patterns are found.
 
-只有发现了相关模式时才创建对应文件。
-
-#### 模式条目格式
+#### Pattern Entry Format
 
 ```markdown
-### <模式名称>
+### <Pattern Name>
 
-- **CC 做法**: 具体描述观察到的行为
-- **证据**: 关键 trace 数据摘录（简洁）
-- **为什么**: 设计原理
-- **来源**: CC 版本、trace 日期
+- **CC approach**: Specific description of observed behavior
+- **Evidence**: Key trace data excerpt (concise)
+- **Rationale**: Design reasoning
+- **Source**: CC version, trace date
 
 ---
 ```
 
-#### 增量更新
+#### Incremental Updates
 
-- 新 trace 添加新模式或更新现有模式
-- 已有模式不会被自动删除
-- 每个模式追踪来源版本
-- 如果新 trace 与现有模式矛盾，标记冲突并询问用户
+- New traces add new patterns or update existing ones
+- Existing patterns are not automatically deleted
+- Each pattern tracks its source version
+- If a new trace contradicts an existing pattern, flag the conflict and ask the user
 
-提取完成后向用户展示摘要：
+After extraction, show a summary to the user:
 
 ```
-模式提取完成！
-  新增模式:     X
-  更新模式:     Y
-  未变化:       Z
-  知识库:       docs/cc-context/patterns/
+Pattern extraction complete!
+  New patterns:      X
+  Updated patterns:  Y
+  Unchanged:         Z
+  Knowledge base:    docs/cc-context/patterns/
 ```
 
-分类参考见 [references/pattern-taxonomy.md](references/pattern-taxonomy.md)。
+For classification reference, see [references/pattern-taxonomy.md](references/pattern-taxonomy.md).
 
-## Phase 2: 探索与澄清
+## Phase 2: Explore and Clarify
 
-### 扫描项目代码
+### Scan Project Code
 
-用 Grep 和 Glob 扫描当前项目的 agent 相关代码，**不硬编码路径**：
+Use Grep and Glob to scan the current project's agent-related code. **Do not hardcode paths.**
 
-**文件模式:**
+**File patterns:**
 - `**/agent/**`, `**/llm/**`, `**/ai/**`, `**/chat/**`
 - `**/*prompt*`, `**/*context*`, `**/*tool*`
 - `**/*completion*`, `**/*message*`
 
-**代码模式:**
-- 系统提示词构造: `system`, `system_prompt`, `system_message`
-- 工具/函数定义: `tools`, `functions`, `function_call`, `tool_choice`
-- 上下文管理: `context`, `token`, `truncat`, `compac`, `compress`
-- LLM API 调用: `messages.create`, `chat.completions`, `anthropic`, `openai`
-- Agent 编排: `agent`, `subagent`, `delegate`, `spawn`
+**Code patterns:**
+- System prompt construction: `system`, `system_prompt`, `system_message`
+- Tool/function definitions: `tools`, `functions`, `function_call`, `tool_choice`
+- Context management: `context`, `token`, `truncat`, `compac`, `compress`
+- LLM API calls: `messages.create`, `chat.completions`, `anthropic`, `openai`
+- Agent orchestration: `agent`, `subagent`, `delegate`, `spawn`
 
-构建已发现组件的映射：文件路径、功能描述、对应的 agent 行为方面。
+Build a map of discovered components: file paths, functional descriptions, corresponding agent behavior aspects.
 
-**如果没找到 agent 相关代码**，停下来告诉用户：
+**If no agent-related code is found**, stop and tell the user:
 
-> 这个项目不包含 agent 或 LLM 集成代码。cc-learn 适用于包含 LLM API 调用的项目（系统提示词、工具定义、上下文管理等）。如果项目确有 agent 代码，请指定子目录路径。
+> This project does not contain agent or LLM integration code. cc-learn is designed for projects with LLM API calls (system prompts, tool definitions, context management, etc.). If the project does have agent code, please specify the subdirectory path.
 
-不要生成一堆 "not applicable" 条目。
+Do not generate a list of "not applicable" entries.
 
-### 提问澄清
+### Clarifying Questions
 
-理解项目后，**一次一个问题**地向用户澄清：
+After understanding the project, clarify with the user **one question at a time**:
 
-- 项目使用的 LLM API 格式（Anthropic / OpenAI / 其他）
-- 最关注的改造方向（性能？成本？质量？）
-- 项目的架构约束和限制
-- 优先级偏好
+- LLM API format used by the project (Anthropic / OpenAI / other)
+- Primary migration focus (performance? cost? quality?)
+- Architectural constraints and limitations
+- Priority preferences
 
-**规则:**
-- 每条消息只问一个问题
-- 尽可能用多选题
-- 开放式问题也可以，但优先多选
-- 聚焦于：目的、约束、成功标准
+**Rules:**
+- Only one question per message
+- Prefer multiple-choice questions
+- Open-ended questions are acceptable but prefer multiple-choice
+- Focus on: purpose, constraints, success criteria
 
-## Phase 3: 对比分析
+## Phase 3: Comparative Analysis
 
-### 逐项对比
+### Item-by-item Comparison
 
-对知识库中的每个模式，评估项目现状：
+For each pattern in the knowledge base, assess the project's current state:
 
-| 状态 | 含义 |
-|------|------|
-| `implemented` | 项目已有等效功能 |
-| `partial` | 有相关代码但缺少关键方面 |
-| `missing` | 未实现 |
-| `not-applicable` | 不适用于该项目架构 |
+| Status | Meaning |
+|--------|---------|
+| `implemented` | Project already has equivalent functionality |
+| `partially-implemented` | Related code exists but missing key aspects |
+| `missing` | Not implemented |
+| `not-applicable` | Not applicable to this project's architecture |
 
-对 `partial` 和 `missing` 的模式，记录：
-- **当前状态**: 项目现在怎么做的（附文件路径）
-- **CC 做法**: Claude Code 怎么做的
-- **差距**: 具体差什么
-- **优先级**: HIGH / MED / LOW
-- **复杂度**: S / M / L
+For `partially-implemented` and `missing` patterns, record:
+- **Current state**: How the project currently handles this (with file paths)
+- **CC approach**: How Claude Code handles this
+- **Gap**: What specifically is missing
+- **Priority**: HIGH / MED / LOW
+- **Complexity**: S / M / L
 
-## Phase 4: 方案制定
+Present the comparison summary to the user and wait for confirmation before proceeding to the next phase.
 
-### 提出改造方向
+## Phase 4: Direction Proposal
 
-基于对比结果，提出 **2-3 种改造方向**，每种包含：
+### Propose Migration Directions
 
-- **方向名称**: 简要概括
-- **覆盖范围**: 涉及哪些模式
-- **权衡**: 优缺点
-- **工作量估算**: 大致规模
-- **推荐理由**（如果是推荐项）
+Based on the comparison results, propose **2-3 migration directions**, each including:
 
-先展示推荐方向并说明理由。
+- **Direction name**: Brief summary
+- **Scope**: Which patterns are covered
+- **Trade-offs**: Pros and cons
+- **Effort estimate**: Approximate scale
+- **Recommendation rationale** (if recommended)
 
-### 分段呈现改造方案
+Present the recommended direction first with rationale. Wait for the user to select a direction before proceeding to Phase 5.
 
-用户选定方向后，**分段展示**详细方案：
+## Phase 5: Plan Development and Confirmation
 
-- 每段覆盖一个主题（如系统提示词、工具设计等）
-- 每段展示后询问用户确认
-- 包含具体的文件路径、修改点、代码示例
-- 用户可以调整后再继续
+### Present Plan in Segments
 
-### 写方案文档
+After the user selects a direction, **present the detailed plan in segments**:
 
-所有段确认后，写入 `docs/cc-context/YYYY-MM-DD-migration-plan.md`（日期时间戳放前面，方便归档排序）：
+- Each segment covers one topic (e.g., system prompt, tool design, etc.)
+- Ask for user confirmation after each segment
+- Include specific file paths, modification points, and code examples
+- User can request adjustments before continuing
+
+### Write Plan Document
+
+After all segments are confirmed, write to `docs/cc-context/YYYY-MM-DD-migration-plan.md` (date prefix for archival sorting).
+
+**Note: Initial status must be set to `draft`. Only update to `confirmed` after user approval.**
 
 ```markdown
 # CC Migration Plan
 
-生成时间: YYYY-MM-DD
-知识库: docs/cc-context/patterns/
-目标项目: <project root>
+status: draft
+Generated: YYYY-MM-DD
+Knowledge base: docs/cc-context/patterns/
+Target project: <project root>
 
-## 总览
+## Overview
 
-| 状态 | 数量 |
-|------|------|
-| 已实现 | X |
-| 部分实现 | Y |
-| 未实现 | Z |
-| 不适用 | W |
+| Status | Count |
+|--------|-------|
+| Implemented | X |
+| Partial | Y |
+| Missing | Z |
+| Not applicable | W |
 
-对齐度: X / (X + Y + Z) = XX%
+Alignment: X / (X + Y + Z) = XX%
 
-## 改造方向
+## Migration Direction
 
-<选定的方向及理由>
+<Selected direction and rationale>
 
-## 改造项
+## Migration Items
 
-### 1. <改造项名称>
+### 1. <Item Name>
 
-- **对应 CC 模式**: <模式名>
-- **当前状态**: <partial / missing>
-- **当前实现**: <项目现在怎么做>
-- **目标实现**: <改造后应该怎样>
-- **涉及文件**: <file paths>
-- **具体步骤**:
+- **CC pattern**: <pattern name>
+- **Current status**: <partially-implemented / missing>
+- **Current implementation**: <how the project currently handles this>
+- **Target implementation**: <desired state after migration>
+- **Affected files**: <file paths>
+- **Steps**:
   1. ...
   2. ...
-- **优先级**: HIGH / MED / LOW
-- **复杂度**: S / M / L
+- **Priority**: HIGH / MED / LOW
+- **Complexity**: S / M / L
 
 ### 2. ...
 
-## 已实现模式
+## Implemented Patterns
 
-（简要列表）
+(Brief list)
 
-## 不适用模式
+## Not Applicable Patterns
 
-（简要列表及原因）
+(Brief list with reasons)
 ```
 
-### 用户审核
+### User Review
 
-文档写完后提示：
+After the document is written, prompt:
 
-> 方案已保存到 `docs/cc-context/YYYY-MM-DD-migration-plan.md`。请审核方案内容，确认后运行 `/cc-apply` 开始执行改造。
+> Plan saved to `docs/cc-context/YYYY-MM-DD-migration-plan.md` (current status: draft). Please review the plan.
 
-等待用户确认。如果需要修改，更新文档。
+Wait for user confirmation. If changes are needed, update the document.
 
-## 关键原则
+**After user approval**, update `status: draft` to `status: confirmed` in the document, then prompt:
 
-- **一次一个问题** — 不堆砌
-- **多选优先** — 降低用户负担
-- **2-3 方案对比** — 不直接给唯一答案
-- **分段确认** — 不一口气输出整个方案
-- **Hard Gate** — 方案未确认不进 cc-apply
-- **无框架假设** — 分析实际代码，不假设使用特定框架
-- **API 格式感知** — 支持 Anthropic 和 OpenAI 格式
-- **尊重项目惯例** — 建议遵循项目现有代码风格
-- **具体可操作** — 指向具体文件、函数、代码模式
+> Plan confirmed (status: confirmed). Run `/cc-apply` to start executing the migration.
+
+## Key Principles
+
+- **One question at a time** — Never stack questions
+- **Prefer multiple-choice** — Reduce cognitive load
+- **2-3 directions to compare** — Never present a single option
+- **Confirm in segments** — Never output the entire plan at once
+- **Hard gate** — Do not proceed to cc-apply without confirmation
+- **Status-driven** — draft → confirmed state transition ensures process integrity
+- **No framework assumptions** — Analyze actual code, do not assume specific frameworks
+- **API format-aware** — Support both Anthropic and OpenAI formats
+- **Respect project conventions** — Follow the project's existing code style
+- **Concrete and actionable** — Reference specific files, functions, and code patterns

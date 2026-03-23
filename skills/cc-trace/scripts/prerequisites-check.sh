@@ -2,16 +2,18 @@
 set -euo pipefail
 
 echo "=== CC Trace Prerequisites Check ==="
+MISSING=0
 
 # 1. node
 NODE_VER=$(node --version 2>/dev/null || echo "")
 if [ -n "$NODE_VER" ]; then
   echo "✓ node $NODE_VER"
 else
-  echo "✗ node not found — installing..."
-  if command -v brew >/dev/null 2>&1; then brew install node
-  elif command -v apt-get >/dev/null 2>&1; then sudo apt-get install -y nodejs npm
-  else echo "BLOCKED: Install Node.js 16+ manually from https://nodejs.org"; exit 1; fi
+  echo "✗ node not found"
+  echo "  Install Node.js 16+ from https://nodejs.org"
+  echo "  macOS:  brew install node"
+  echo "  Linux:  sudo apt-get install -y nodejs npm"
+  MISSING=$((MISSING + 1))
 fi
 
 # 2. jq
@@ -19,10 +21,11 @@ JQ_VER=$(jq --version 2>/dev/null || echo "")
 if [ -n "$JQ_VER" ]; then
   echo "✓ jq $JQ_VER"
 else
-  echo "✗ jq not found — installing..."
-  if command -v brew >/dev/null 2>&1; then brew install jq
-  elif command -v apt-get >/dev/null 2>&1; then sudo apt-get install -y jq
-  else echo "BLOCKED: Install jq manually from https://jqlang.github.io/jq/download/"; exit 1; fi
+  echo "✗ jq not found"
+  echo "  Install jq from https://jqlang.github.io/jq/download/"
+  echo "  macOS:  brew install jq"
+  echo "  Linux:  sudo apt-get install -y jq"
+  MISSING=$((MISSING + 1))
 fi
 
 # 3. claude-trace
@@ -31,14 +34,9 @@ if command -v claude-trace >/dev/null 2>&1; then
 elif npx --yes @mariozechner/claude-trace --help >/dev/null 2>&1; then
   echo "✓ claude-trace available via npx"
 else
-  echo "✗ claude-trace not found — installing..."
-  if npm install -g @mariozechner/claude-trace; then
-    echo "✓ claude-trace installed"
-  else
-    echo "BLOCKED: Failed to install claude-trace."
-    echo "  Try: npm install -g @mariozechner/claude-trace"
-    exit 1
-  fi
+  echo "✗ claude-trace not found"
+  echo "  Install: npm install -g @mariozechner/claude-trace"
+  MISSING=$((MISSING + 1))
 fi
 
 # 4. npm registry accessibility
@@ -51,14 +49,13 @@ else
   echo "  Check network and npm config."
 fi
 
-# 5. Quick capture test (verify end-to-end)
-echo "--- End-to-End Test ---"
-if [ -n "$LATEST" ]; then
+# 5. Summary
+echo ""
+if [ "$MISSING" -gt 0 ]; then
+  echo "=== $MISSING missing prerequisite(s) — install them before running capture ==="
+  exit 1
+else
+  echo "=== All prerequisites met ==="
   echo "  To verify full pipeline, run:"
   echo "    bash scripts/capture-trace.sh"
-else
-  echo "  ⚠ Skipped (npm registry not accessible)"
 fi
-
-echo ""
-echo "=== Check Complete ==="

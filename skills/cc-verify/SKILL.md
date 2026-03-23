@@ -9,6 +9,8 @@ Capture your agent project's runtime API traces and compare them against the cc-
 
 This skill closes the feedback loop: `cc-trace → cc-learn → cc-apply → cc-verify`.
 
+For data path and format conventions, see [../shared/data-contracts.md](../shared/data-contracts.md).
+
 ## Prerequisites
 
 1. A `docs/cc-context/patterns/` knowledge base must exist (created by `/cc-learn`)
@@ -16,13 +18,13 @@ This skill closes the feedback loop: `cc-trace → cc-learn → cc-apply → cc-
 
 ## Workflow
 
-### Step 1: Locate knowledge base
+### Step 1: Locate Knowledge Base
 
 Use Glob to find `docs/cc-context/patterns/*.md`. If the user specifies a custom path, use that.
 
 If not found, tell the user to run `/cc-learn` first.
 
-### Step 2: Obtain target project traces
+### Step 2: Obtain Target Project Traces
 
 The target project's API traces can come from multiple sources. Ask the user which applies:
 
@@ -38,17 +40,25 @@ Both Anthropic API format and OpenAI-compatible format are supported.
 **Option B — Log files or debug output**
 The user points to application logs that contain API request/response data. Read and parse them.
 
-**Option C — Live capture (if the project uses Node.js + Anthropic API)**
-Use `claude-trace` to intercept the project's API calls:
+**Option C — HTTP proxy capture**
+If the project has no built-in trace output, capture API requests via an HTTP proxy:
 ```bash
-claude-trace --claude-path <path-to-project-entry> --no-open --include-all-requests --run-with <args>
+# Approach 1: Set environment variable to route traffic through a proxy
+HTTPS_PROXY=http://localhost:8080 <start project command>
+
+# Approach 2: If the project is Node.js and uses fetch, try claude-trace
+# Note: claude-trace works by monkey-patching Node.js fetch, only applicable to Node.js projects
+# --claude-path is repurposed here to point to the project's entry file instead of Claude Code's cli.js
+# This is an unofficial usage — prefer HTTPS_PROXY for production projects
+claude-trace --claude-path <project entry file> --no-open --include-all-requests --run-with <args>
 ```
-This only works if the project uses Node.js and makes fetch-based HTTP calls.
 
-**Option D — Code inspection fallback**
-If no runtime traces are available, fall back to static analysis (similar to cc-apply) but clearly mark results as "static only — not runtime verified".
+> **Limitations:** claude-trace was originally designed for intercepting Claude Code. When used with other Node.js projects, the following requirements must be met: (1) the project uses Node.js, (2) HTTP requests are made via Node.js built-in fetch or undici. For non-Node.js projects or projects using native HTTP clients, use the HTTPS_PROXY approach or Option A/B.
 
-### Step 3: Normalize trace data
+**Option D — Static code analysis (fallback)**
+If no runtime traces are available, fall back to static analysis (similar to cc-apply's code inspection), but **clearly mark results as "static only — not runtime verified"**.
+
+### Step 3: Normalize Trace Data
 
 Convert the captured data to a common format for comparison:
 
@@ -64,49 +74,51 @@ Convert the captured data to a common format for comparison:
 ```
 
 Handle API format differences:
-- Anthropic: `system` is array of blocks, tools use `input_schema`
+- Anthropic: `system` is an array of blocks, tools use `input_schema`
 - OpenAI: `system` is a message role, tools use `function.parameters`
 
-### Step 4: Pattern-by-pattern verification
+### Step 4: Pattern-by-Pattern Verification
 
 For each pattern in the knowledge base, check the trace data:
 
 | Verification Status | Meaning |
 |---------------------|---------|
 | `confirmed` | Runtime behavior matches the CC pattern |
-| `partial` | Some aspects present, others missing |
+| `partially-confirmed` | Some aspects present at runtime, others missing |
 | `not-observed` | Pattern not detected in traces (may need more test scenarios) |
 | `diverged` | Implementation exists but behaves differently from CC pattern |
 | `not-applicable` | Pattern cannot apply to this project's API/architecture |
 
 For each pattern, assess against specific observable criteria:
 
-**System Prompt Design patterns:**
+**System prompt design patterns:**
 - Check block count, content ordering, total size
 - Verify stable content appears first
 - Check if cache-friendly structure is maintained
 
-**Tool Engineering patterns:**
+**Tool engineering patterns:**
 - Compare tool names, descriptions, parameter schemas
 - Check tool count per request
 - Look for deferred/conditional tool loading
 
-**Context Management patterns:**
+**Context management patterns:**
 - Track message count growth across requests
 - Check for compaction/truncation evidence
 - Measure system content ratio vs total context
 
-**Thinking/Reasoning patterns:**
+**Thinking/reasoning patterns:**
 - Verify thinking config presence and budget sizing
 - Check effort level settings
 
-**Message Patterns:**
+**Message patterns:**
 - Look for system-reminder or equivalent injection patterns
 - Analyze role distribution
 
+For detailed verification criteria, see [references/verification-criteria.md](references/verification-criteria.md).
+
 ### Step 5: Generate Verification Report
 
-Write to `docs/cc-context/YYYY-MM-DD-verification-report.md` (use today's date). Create `docs/` if needed.
+Write to `docs/cc-context/YYYY-MM-DD-verification-report.md` (use today's date). Create `docs/cc-context/` if needed. If a report with the same date already exists, overwrite it (the latest run is authoritative).
 
 ```markdown
 # CC Verification Report
@@ -121,7 +133,7 @@ Requests analyzed: N
 | Status | Count |
 |--------|-------|
 | Confirmed | X |
-| Partial | Y |
+| Partially confirmed | Y |
 | Not observed | Z |
 | Diverged | W |
 | Not applicable | V |
@@ -135,7 +147,7 @@ Behavioral alignment: X / (X + Y + Z + W) = XX%
 - **Observed**: <what your project does>
 - **Evidence**: <trace data excerpt>
 
-## Partial / Diverged Patterns
+## Partially Confirmed / Diverged Patterns
 
 ### <Pattern Name>
 - **Expected (CC)**: <what CC does>
@@ -155,33 +167,38 @@ Patterns that could not be verified — may need additional test scenarios:
 - <Pattern Name>: <reason>
 ```
 
-### Step 6: Comparison with cc-apply migration plan
+### Step 6: Cross-reference with Migration Plan
 
-Use Glob to find the latest `docs/cc-context/*-migration-plan.md` (from a previous `/cc-learn` run). If found, compare:
+Use Glob to find all `docs/cc-context/*-migration-plan.md` files. Sort matches lexicographically and pick the last one (most recent date). If found, cross-reference:
 
-- Items marked as completed in the migration plan but **NOT** confirmed at runtime → **false positive** (cc-apply execution issue)
-- Items confirmed at runtime but **NOT** in the migration plan → project already implemented these patterns independently (no action needed)
+- Items marked ✅ in the migration plan but **NOT** confirmed at runtime → **false positive** (cc-apply execution issue). Update the marker to ⚠️.
+- Items confirmed at runtime but **NOT** in the migration plan → project already implemented these patterns independently (no action needed).
+
+**Write back to migration plan:** For false positive items, automatically update the corresponding migration item's ✅ to ⚠️ in the migration plan, appending a reason (e.g., `⚠️ not confirmed at runtime — see verification report YYYY-MM-DD`).
+
+If all executed items pass verification **and** the migration plan's current status is `completed`, update the status to `verified`. If the status is still `in-progress`, warn that migration has not finished and do not update the status.
 
 Report all discrepancies with possible causes.
 
-### Step 7: Output summary
+### Step 7: Output Summary
 
 ```
 CC Verify complete!
   Requests analyzed:     N
   Confirmed:             X patterns
-  Partial/Diverged:      Y patterns
+  Partially confirmed/Diverged: Y patterns
   Not observed:          Z patterns
   Behavioral alignment:  XX%
   Report:                docs/cc-context/YYYY-MM-DD-verification-report.md
 ```
 
-If there are partial/diverged patterns, suggest: "先运行 `/cc-learn` 更新方案，再运行 `/cc-apply` 重新执行".
+If there are partially-confirmed/diverged patterns, suggest: "Run `/cc-learn` to update the plan, then run `/cc-apply` to re-execute."
 
-If many patterns are "not observed", suggest specific test scenarios to run to generate more comprehensive traces.
+If many patterns are "not observed", suggest running more diverse test scenarios to generate more comprehensive trace data.
 
-## Important Notes
+## Key Principles
 
-- **Runtime data is essential.** Static code analysis (cc-apply) and runtime verification (cc-verify) serve different purposes. Code that looks correct may not behave correctly at runtime.
-- **More traces = better verification.** A single API request may not cover all patterns. Encourage users to capture traces from diverse scenarios (simple queries, complex multi-turn tasks, tool-heavy operations).
-- **Format-agnostic.** Support both Anthropic and OpenAI API formats. The comparison is at the pattern level, not the API field level.
+- **Runtime data is essential** — Static code analysis (cc-apply) and runtime verification (cc-verify) serve different purposes. Code that looks correct may not behave correctly at runtime.
+- **More traces = better verification** — A single API request may not cover all patterns. Encourage users to capture traces from diverse scenarios (simple queries, complex multi-turn tasks, tool-heavy operations).
+- **Format-agnostic** — Support both Anthropic and OpenAI API formats. Comparison is at the pattern level, not the API field level.
+- **Close the loop** — Verification results are written back to the migration plan, ensuring the feedback loop is truly closed.
