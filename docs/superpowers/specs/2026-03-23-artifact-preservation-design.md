@@ -78,13 +78,13 @@ No functional change. Still captures JSONL + metadata only. Path remains `docs/c
 | Output File | Source in JSONL | Extraction Method |
 |-------------|-----------------|-------------------|
 | `system-prompt-full.md` | `.request.body.system[]` | Concatenate all system blocks, separated by `---`, with cache_control annotations |
-| `tool-definitions/<Name>.json` | `.request.body.tools[]` | One file per unique tool, full definition including input_schema |
+| `tool-definitions/<ToolName>.json` | `.request.body.tools[]` | One file per unique tool, full definition including input_schema |
 | `thinking-configs.md` | `.request.body.thinking`, `.request.body.output_config` | All unique configs with request context |
 | `context-management.md` | `.request.body.context_management` | All unique configs |
 | `system-reminders.md` | system-reminder tags in user messages | Extract all `<system-reminder>` content blocks |
 | `deferred-tools.md` | deferred tools declarations in messages | Extract available-deferred-tools content |
 | `first-turn.json` | First LLM request | Complete request body (system, messages, tools, config) |
-| `model-routing.md` | `.request.body.model`, `.request.body.max_tokens` | Per-request summary table |
+| `model-routing.md` | `.request.body.model`, `.request.body.max_tokens`, `.request.body.thinking`, `.request.body.output_config` | Per-request summary: model, max_tokens, thinking config, effort |
 
 **Pattern entry format updated** — evidence field links to examples:
 
@@ -92,7 +92,7 @@ No functional change. Still captures JSONL + metadata only. Path remains `docs/c
 ### <Pattern Name>
 
 - **CC approach**: Specific description of observed behavior
-- **Evidence**: See [examples/YYYY-MM-DD-v<version>/system-prompt-full.md](examples/YYYY-MM-DD-v<version>/system-prompt-full.md)
+- **Evidence**: See [examples/YYYY-MM-DD-v<version>/system-prompt-full.md](../examples/YYYY-MM-DD-v<version>/system-prompt-full.md)
 - **Rationale**: Design reasoning
 - **Source**: CC v<version>, YYYY-MM-DD
 ```
@@ -109,6 +109,7 @@ No functional change. Still captures JSONL + metadata only. Path remains `docs/c
 ### cc-verify
 
 - **Knowledge base path**: `docs/cc-context/knowledge/patterns/*.md`
+- **Reference examples path**: `docs/cc-context/knowledge/examples/` (used for precise behavioral matching during verification)
 - **Migration plan path**: `docs/cc-context/plans/*-migration-plan.md`
 - **Report path**: `docs/cc-context/reports/YYYY-MM-DD-verification-report.md`
 

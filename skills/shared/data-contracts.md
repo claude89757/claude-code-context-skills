@@ -36,13 +36,13 @@ docs/cc-context/
 cc-trace ──→ traces/*/trace.jsonl ──→ cc-learn ──→ knowledge/patterns/*.md
                                          │              knowledge/examples/*/
                                          │
-                                         └──→ plans/migration-plan.md ──→ cc-apply
-                                                        │                    │
-                                                        ←── ✅ marks ────────┘
+                                         └──→ plans/YYYY-MM-DD-migration-plan.md ──→ cc-apply
+                                                        │                               │
+                                                        ←────────── ✅ marks ───────────┘
                                                         │
-                                                cc-verify ──→ reports/verification-report.md
-                                                    │
-                                                    └──→ write back to plans/ (⚠️ marks)
+                                        knowledge/ ──→ cc-verify ──→ reports/YYYY-MM-DD-verification-report.md
+                                                          │
+                                                          └──→ write back to plans/ (⚠️ marks)
 ```
 
 ## Migration Plan Status
@@ -95,10 +95,10 @@ The following files are extracted by cc-learn from raw JSONL traces into `knowle
 | File | Content | Source in JSONL |
 |------|---------|-----------------|
 | `system-prompt-full.md` | Complete system prompt text, blocks separated by `---` | `.request.body.system[]` |
-| `tool-definitions/<Name>.json` | Individual tool definition with full schema | `.request.body.tools[]` |
-| `thinking-configs.md` | All unique thinking/effort configs with request context | `.request.body.thinking`, `.output_config` |
+| `tool-definitions/<ToolName>.json` | Individual tool definition with full schema | `.request.body.tools[]` |
+| `thinking-configs.md` | All unique thinking/effort configs with request context | `.request.body.thinking`, `.request.body.output_config` |
 | `context-management.md` | Context management configurations | `.request.body.context_management` |
 | `system-reminders.md` | All `<system-reminder>` injected content | User messages containing system-reminder tags |
 | `deferred-tools.md` | Deferred tools declarations | Messages containing available-deferred-tools |
 | `first-turn.json` | Complete first LLM request body | First request matching `v1/messages` |
-| `model-routing.md` | Per-request model + max_tokens summary | `.request.body.model`, `.max_tokens` |
+| `model-routing.md` | Per-request summary: model, max_tokens, thinking config, effort | `.request.body.model`, `.request.body.max_tokens`, `.request.body.thinking`, `.request.body.output_config` |

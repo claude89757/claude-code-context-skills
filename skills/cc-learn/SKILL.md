@@ -128,12 +128,12 @@ Extract raw artifacts from the JSONL trace into `docs/cc-context/knowledge/examp
 |-------------|---------|-----------------|
 | `system-prompt-full.md` | Complete system prompt text; all blocks separated by `---` with cache_control annotations | `.request.body.system[]` |
 | `tool-definitions/<ToolName>.json` | Individual tool definition with full input_schema; one file per unique tool | `.request.body.tools[]` |
-| `thinking-configs.md` | All unique thinking/effort configurations with request context | `.request.body.thinking`, `.output_config` |
+| `thinking-configs.md` | All unique thinking/effort configurations with request context | `.request.body.thinking`, `.request.body.output_config` |
 | `context-management.md` | All unique context_management configurations | `.request.body.context_management` |
 | `system-reminders.md` | All `<system-reminder>` injected content extracted from user messages | User messages containing system-reminder tags |
 | `deferred-tools.md` | All deferred tools declarations | Messages containing available-deferred-tools |
 | `first-turn.json` | Complete first LLM request body (system, messages, tools, config) | First request matching `v1/messages` |
-| `model-routing.md` | Per-request summary: model, max_tokens, thinking config, effort | `.request.body.model`, `.max_tokens` |
+| `model-routing.md` | Per-request summary: model, max_tokens, thinking config, effort | `.request.body.model`, `.request.body.max_tokens`, `.request.body.thinking`, `.request.body.output_config` |
 
 ### Extraction Summary
 
