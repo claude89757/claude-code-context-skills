@@ -1,11 +1,11 @@
 ---
 name: cc-trace
-description: "Capture and analyze Claude Code's real API requests using claude-trace. Use when you need to see what Claude Code actually sends to the LLM — system prompts, tools, thinking config, context management. Supports version capture, comparison, and automatic pattern extraction into structured reports."
+description: "Capture and store Claude Code's real API requests using claude-trace. Use when you need to see what Claude Code actually sends to the LLM — system prompts, tools, thinking config, context management. Supports version capture and comparison. Raw trace data is saved to the project for later analysis by /cc-learn."
 ---
 
 # CC Trace
 
-Use `claude-trace` (`@mariozechner/claude-trace`) to capture the exact API requests Claude Code sends to the Anthropic API, then extract context engineering patterns into a structured report.
+Use `claude-trace` (`@mariozechner/claude-trace`) to capture the exact API requests Claude Code sends to the Anthropic API, then store raw trace data to the project directory. This skill only captures and stores — pattern analysis is done by `/cc-learn`.
 
 > **Native Binary vs npm.** Since Claude Code v2.x, the system `claude` binary is a compiled native executable. `claude-trace` works by monkey-patching Node.js `fetch`, so it cannot intercept native binaries. All scripts use `npm install @anthropic-ai/claude-code@<version>` and pass `--claude-path` to `claude-trace`.
 
@@ -45,9 +45,9 @@ bash scripts/compare-versions.sh <v1> <v2>
 
 See [references/version-analysis.md](references/version-analysis.md) for details.
 
-## Analyze Trace Data
+## 快速预览 Trace 数据（可选）
 
-All analysis MUST use real JSONL trace files. If no trace data is available, capture it first. **Never guess or assume patterns — extract everything from the data.**
+All analysis MUST use real JSONL trace files. If no trace data is available, capture it first.
 
 ### Filter LLM requests
 
@@ -110,37 +110,31 @@ jq -c '{method: .request.method, url: .request.url}' FILE.jsonl
 claude-trace --generate-html FILE.jsonl
 ```
 
-## Pattern Report Generation
+## 保存原始数据
 
-After capturing and inspecting trace data, generate a structured Pattern Report. This report extracts Claude Code's context engineering patterns for use by `/cc-learn`.
+抓取完成后，脚本会自动将 trace 数据保存到用户工作目录：
 
-### Report structure
+### 存储结构
 
-Write the report to the user's working directory as `cc-trace-report-YYYY-MM-DD.md`. Organize findings by these categories (skip categories with no findings):
-
-1. **System Prompt Architecture** — How the system prompt is structured: block count, content segmentation, ordering, `cache_control` breakpoint placement, total size vs context window ratio
-2. **Tool Design** — Tool definitions: naming conventions, parameter schemas, description style, tool count, deferred tools mechanism
-3. **Context Management** — `context_management` API config, message compaction, context window utilization strategy
-4. **Caching Strategy** — `cache_control` placement pattern, which blocks are marked `ephemeral`, cache hit rates from usage stats
-5. **Thinking & Reasoning** — `thinking` config, `budget_tokens`, `output_config` effort levels, when thinking is enabled vs disabled
-6. **Message Patterns** — `system-reminder` injection patterns, message role distribution, tool call/result patterns, multi-turn conversation structure
-7. **Model Routing** — Model selection, `max_tokens` settings, any model switching across requests
-
-### Per-pattern entry format
-
-For each discovered pattern, include:
-
-```markdown
-### <Pattern Name>
-- **CC does**: Concrete description of the observed behavior
-- **Evidence**: Relevant trace data excerpt or jq output
-- **Why**: Design rationale — why this pattern likely exists (inferred from the data)
-- **Source**: Claude Code version and capture date
+```
+docs/cc-traces/
+└── YYYY-MM-DD-v<version>/
+    ├── trace.jsonl      # 原始 trace 数据
+    └── metadata.json    # 抓取元信息
 ```
 
-### Key principles
+### metadata.json 格式
 
-- **No hardcoded knowledge.** All findings must come from real trace data
-- **Data may vary.** Claude Code's behavior changes across versions — always verify with fresh traces
-- **Anthropic API format.** System prompt is in `.request.body.system[]` array, tools use `.tools[].name` (not `.tools[].function.name`)
-- If capture fails, report what went wrong honestly. Do not fill gaps with assumptions.
+```json
+{
+  "version": "<claude-code-version>",
+  "capture_date": "YYYY-MM-DD",
+  "request_count": <total-requests>,
+  "llm_request_count": <llm-requests>,
+  "prompt_used": "hello"
+}
+```
+
+### 完成后
+
+抓取和保存完成后，运行 `/cc-learn` 对原始 trace 数据进行模式提取和分析。

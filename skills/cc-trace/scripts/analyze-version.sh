@@ -74,6 +74,26 @@ else
   echo "  Try manually: cd $WORK_DIR && claude-trace --claude-path $CLAUDE_CLI --run-with -p hello"
 fi
 
+# Save to project directory if specified (PROJECT_DIR must be captured before exec in caller)
+PROJECT_DIR="${2:-}"
+if [ -n "$PROJECT_DIR" ] && [ -n "$TRACE_FILE" ] && [ -s "$TRACE_FILE" ]; then
+  SAVE_DIR="$PROJECT_DIR/docs/cc-traces/$(date +%Y-%m-%d)-v${VERSION}"
+  mkdir -p "$SAVE_DIR"
+  cp "$TRACE_FILE" "$SAVE_DIR/trace.jsonl"
+  SAVE_LINES=$(wc -l < "$TRACE_FILE" | tr -d ' ')
+  LLM_COUNT=$(jq -c 'select(.request.url | test("v1/messages"))' "$TRACE_FILE" 2>/dev/null | wc -l | tr -d ' ')
+  cat > "$SAVE_DIR/metadata.json" <<METAEOF
+{
+  "version": "$VERSION",
+  "capture_date": "$(date +%Y-%m-%d)",
+  "request_count": ${SAVE_LINES:-0},
+  "llm_request_count": ${LLM_COUNT:-0},
+  "prompt_used": "hello"
+}
+METAEOF
+  echo "✓ Saved to $SAVE_DIR"
+fi
+
 echo ""
 echo "=== Info ==="
 echo "Work dir: $WORK_DIR"

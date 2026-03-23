@@ -12,17 +12,17 @@ Claude Code 是一个生产级 AI 编程智能体，拥有精密的上下文工�
 
 | Skill | 用途 |
 |-------|------|
-| **cc-trace** | 使用 [claude-trace](https://www.npmjs.com/package/@mariozechner/claude-trace) 抓取 Claude Code 的真实 API 请求。查看 system prompt、工具定义、thinking 配置、上下文管理等。生成 Pattern Report。 |
-| **cc-learn** | 从 cc-trace 报告中提取模式，整理到持久化的主题知识库（`docs/cc-patterns/`）。支持跨版本增量更新。 |
-| **cc-apply** | 扫描你的智能体项目代码，与知识库对比，生成带优先级的 Gap Report 和迁移建议。 |
+| **cc-trace** | 使用 [claude-trace](https://www.npmjs.com/package/@mariozechner/claude-trace) 抓取 Claude Code 的真实 API 请求，保存原始 trace 数据供分析。 |
+| **cc-learn** | 从原始 trace 中提取模式，通过协作式对话对比你的项目代码，生成详细的改造方案（`docs/YYYY-MM-DD-cc-migration-plan.md`）。 |
+| **cc-apply** | 按改造方案逐项执行代码修改，每步完成后向用户确认。 |
 | **cc-verify** | 捕获你项目的运行时 API trace，验证迁移的模式是否真正生效——而不仅仅是代码中存在。 |
 
 ## 工作流程
 
 ```
 cc-trace  →  cc-learn  →  cc-apply  →  cc-verify
-（抓取）      （提取）      （分析）      （验证）
-                             ↑            |
+（抓取）      （分析        （执行）      （验证）
+              + 制定方案）     ↑            |
                              └────────────┘
                            （迭代改进）
 ```
@@ -30,7 +30,7 @@ cc-trace  →  cc-learn  →  cc-apply  →  cc-verify
 每个 skill 可独立使用，也可组合形成完整的学习闭环：
 
 - **只是好奇？** 单独运行 `cc-trace` 看看 Claude Code 发给 API 的内容。
-- **已有知识库？** 直接跳到 `cc-apply`，使用之前积累的知识库分析新项目。
+- **已有知识库？** 直接跳到 `cc-learn`，使用之前积累的知识库对比分析并制定改造方案。
 - **已完成迁移？** 运行 `cc-verify` 确认运行时行为符合预期。
 
 ## 安装
@@ -70,33 +70,26 @@ cc-trace  →  cc-learn  →  cc-apply  →  cc-verify
 /cc-trace
 ```
 
-抓取最新版 Claude Code 的真实 API 请求，生成 Pattern Report（`cc-trace-report-YYYY-MM-DD.md`）。
+抓取最新版 Claude Code 的真实 API 请求，保存原始 trace 数据到 `docs/cc-traces/`。
 
-### 2. 构建知识库
+### 2. 分析并制定改造方案
 
 ```bash
 /cc-learn
 ```
 
-读取 Pattern Report，按主题整理到 `docs/cc-patterns/`：
-- `system-prompt-design.md` — System Prompt 设计
-- `tool-engineering.md` — 工具工程
-- `context-management.md` — 上下文管理
-- `thinking-reasoning.md` — 思维推理
-- `message-patterns.md` — 消息模式
-- `model-routing.md` — 模型路由
-- `agent-orchestration.md` — 智能体编排
+从 trace 中提取模式，通过协作式对话对比你的项目代码，生成改造方案（`docs/YYYY-MM-DD-cc-migration-plan.md`）：
+- 对齐分数
+- 按优先级排列的 gap 项（HIGH / MED / LOW）
+- 带文件引用的具体改造步骤
 
-### 3. 分析你的项目
+### 3. 执行改造
 
 ```bash
 /cc-apply
 ```
 
-扫描你的智能体代码库，与知识库对比，输出 `docs/cc-alignment-report.md`：
-- 对齐分数
-- 按优先级排列的 gap 项（HIGH / MED / LOW）
-- 带文件引用的具体迁移建议
+读取改造方案，逐项执行代码修改，每步完成后向用户确认。
 
 ### 4. 运行时验证
 
@@ -123,14 +116,14 @@ cc-trace  →  cc-learn  →  cc-apply  →  cc-verify
 .claude-plugin/
   plugin.json              # 插件元数据
 skills/
-  cc-trace/                # Trace 抓取与模式提取
+  cc-trace/                # Trace 抓取与原始数据存储
     SKILL.md
     scripts/               # 抓取和分析脚本
     references/            # 排障和版本分析指南
-  cc-learn/                # 知识库构建
+  cc-learn/                # 模式分析 + 项目对比 + 改造方案制定
     SKILL.md
     references/            # 模式分类参考
-  cc-apply/                # Gap 分析与迁移
+  cc-apply/                # 改造方案执行
     SKILL.md
     references/            # API 迁移策略
   cc-verify/               # 运行时验证

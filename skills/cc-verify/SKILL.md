@@ -1,6 +1,6 @@
 ---
 name: cc-verify
-description: "Verify that Claude Code patterns were correctly migrated to your agent project. Captures your project's runtime API traces, compares them against the cc-learn knowledge base, and reports which patterns are behaviorally confirmed, partially present, or missing at runtime. Closes the learn-apply-verify loop."
+description: "Verify that Claude Code patterns were correctly migrated to your agent project. Captures your project's runtime API traces, compares them against the cc-learn knowledge base, and reports which patterns are behaviorally confirmed, partially present, or missing at runtime. Closes the trace-learn-apply-verify loop."
 ---
 
 # CC Verify
@@ -106,7 +106,7 @@ For each pattern, assess against specific observable criteria:
 
 ### Step 5: Generate Verification Report
 
-Write to `docs/cc-verification-report.md`. Create `docs/` if needed.
+Write to `docs/YYYY-MM-DD-cc-verification-report.md` (use today's date). Create `docs/` if needed.
 
 ```markdown
 # CC Verification Report
@@ -155,14 +155,14 @@ Patterns that could not be verified — may need additional test scenarios:
 - <Pattern Name>: <reason>
 ```
 
-### Step 6: Comparison with cc-apply report
+### Step 6: Comparison with cc-apply migration plan
 
-If `docs/cc-alignment-report.md` exists (from a previous `/cc-apply` run), compare:
+Use Glob to find the latest `docs/*-cc-migration-plan.md` (from a previous `/cc-learn` run). If found, compare:
 
-- Patterns that cc-apply marked as `implemented` but cc-verify marks as `not-observed` or `diverged` → **false positives** in static analysis, flag these
-- Patterns that cc-apply marked as `missing` but cc-verify marks as `confirmed` → unlikely but possible if implementation was added after the last cc-apply run
+- Items marked as completed in the migration plan but **NOT** confirmed at runtime → **false positive** (cc-apply execution issue)
+- Items confirmed at runtime but **NOT** in the migration plan → project already implemented these patterns independently (no action needed)
 
-Report any discrepancies.
+Report all discrepancies with possible causes.
 
 ### Step 7: Output summary
 
@@ -173,10 +173,10 @@ CC Verify complete!
   Partial/Diverged:      Y patterns
   Not observed:          Z patterns
   Behavioral alignment:  XX%
-  Report:                docs/cc-verification-report.md
+  Report:                docs/YYYY-MM-DD-cc-verification-report.md
 ```
 
-If there are partial/diverged patterns, suggest re-running `/cc-apply` to get updated migration suggestions.
+If there are partial/diverged patterns, suggest: "先运行 `/cc-learn` 更新方案，再运行 `/cc-apply` 重新执行".
 
 If many patterns are "not observed", suggest specific test scenarios to run to generate more comprehensive traces.
 

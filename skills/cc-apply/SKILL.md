@@ -1,141 +1,69 @@
 ---
 name: cc-apply
-description: "Apply Claude Code context engineering patterns to your agent project. Reads the cc-learn knowledge base, scans your project's agent-related code, identifies gaps and opportunities, and generates actionable migration suggestions. Works with any agent codebase — not tied to specific frameworks."
+description: "按 cc-learn 生成的改造方案执行代码改造。读取最新的 migration plan 文档，逐项修改项目代码，每步完成后向用户确认。纯执行层，不做分析。"
 ---
 
 # CC Apply
 
-Read the cc-learn knowledge base and analyze your agent project to identify which Claude Code patterns are applicable, which are already implemented, and which represent opportunities for improvement.
+读取 cc-learn 生成的改造方案，逐项执行代码改造。
 
-## Prerequisites
+## 前置条件
 
-A `docs/cc-patterns/` knowledge base directory must exist (created by `/cc-learn`). Use Glob to verify:
-
-```
-docs/cc-patterns/*.md
-```
-
-If the user specifies a custom path (e.g., `/cc-apply --kb /path/to/cc-patterns`), use that instead.
-
-If no knowledge base is found, tell the user to run `/cc-learn` first, or specify the knowledge base path.
-
-## Workflow
-
-### Step 1: Load knowledge base
-
-Read all `docs/cc-patterns/*.md` files (or from the custom path). Extract every pattern entry (identified by `###` headings with the standard fields: CC does, Evidence, Why, When useful, Migration notes).
-
-### Step 2: Discover agent code in target project
-
-Scan the current working directory for agent-related code. Use Grep and Glob — do NOT hardcode any paths. Search for:
-
-**File patterns:**
-- `**/agent/**`, `**/llm/**`, `**/ai/**`, `**/chat/**`
-- `**/*prompt*`, `**/*context*`, `**/*tool*`
-- `**/*completion*`, `**/*message*`
-- `**/AGENT.md`, `**/CLAUDE.md`, `**/*.prompt`
-
-**Code patterns:**
-- System prompt construction (search: `system`, `system_prompt`, `system_message`)
-- Tool/function definitions (search: `tools`, `functions`, `function_call`, `tool_choice`)
-- Context management (search: `context`, `token`, `truncat`, `compac`, `compress`)
-- LLM API calls (search: `messages.create`, `chat.completions`, `anthropic`, `openai`)
-- Agent orchestration (search: `agent`, `subagent`, `delegate`, `spawn`)
-
-Build a map of discovered components: file paths, what each file does, and which aspect of agent behavior it handles.
-
-**If no agent-related code is found**, stop and tell the user:
-
-> This project does not appear to contain agent or LLM integration code. cc-apply is designed for projects that make LLM API calls (system prompts, tool definitions, context management, etc.). If this project does have agent code, try specifying the subdirectory: `/cc-apply --path src/agent/`
-
-Do NOT generate a report full of "not applicable" entries.
-
-### Step 3: Gap analysis
-
-For each pattern in the knowledge base, assess the target project:
-
-| Status | Meaning |
-|--------|---------|
-| `implemented` | Project has equivalent functionality |
-| `partial` | Project has related code but misses key aspects |
-| `missing` | Project does not implement this pattern |
-| `not-applicable` | Pattern doesn't apply to this project's architecture |
-
-For `partial` and `missing` patterns, provide:
-- **Current state**: What the project does today (with file path references)
-- **Suggested action**: Concrete steps to implement the pattern
-- **Priority**: HIGH (core architecture) / MED (optimization) / LOW (nice-to-have)
-- **Complexity**: S (hours) / M (days) / L (weeks)
-
-### Step 4: Generate Gap Report
-
-Write the report to `docs/cc-alignment-report.md` in the target project directory. Create the `docs/` directory if needed.
-
-**Report format:**
-
-```markdown
-# CC Alignment Report
-
-Generated: YYYY-MM-DD
-Knowledge base: docs/cc-patterns/
-Target project: <project root>
-
-## Summary
-
-| Status | Count |
-|--------|-------|
-| Implemented | X |
-| Partial | Y |
-| Missing | Z |
-| Not applicable | W |
-
-Alignment score: X / (X + Y + Z) = XX%
-
-## HIGH Priority Gaps
-
-### <Pattern Name> (from <topic file>)
-- **Status**: missing / partial
-- **Current state**: <what the project does today>
-- **CC pattern**: <what CC does>
-- **Suggested action**: <concrete migration steps>
-- **Files to modify**: <relevant file paths>
-- **Complexity**: S / M / L
-
-## MED Priority Gaps
-
-(same format)
-
-## LOW Priority Gaps
-
-(same format)
-
-## Already Implemented
-
-(brief list of implemented patterns with file references)
-
-## Not Applicable
-
-(brief list with reason)
-```
-
-### Step 5: Output summary
+`docs/*-cc-migration-plan.md` 必须存在（由 `/cc-learn` 生成）。用 Glob 找最新的：
 
 ```
-CC Apply complete!
-  Implemented:      X patterns
-  Partial:          Y patterns
-  Missing:          Z patterns
-  Not applicable:   W patterns
-  Alignment:        XX%
-  HIGH priority:    N gaps
-  Report:           docs/cc-alignment-report.md
+docs/*-cc-migration-plan.md
 ```
 
-If there are HIGH priority gaps, suggest starting with the highest-impact, lowest-complexity item.
+如果不存在，告诉用户先运行 `/cc-learn`。
 
-## Important Notes
+## 工作流
 
-- **No framework assumptions.** Do not assume the project uses any specific framework (LangChain, CrewAI, etc.). Analyze what's actually in the code.
-- **API format awareness.** Claude Code uses Anthropic API format. Target projects may use OpenAI-compatible APIs. See [references/migration-strategies.md](references/migration-strategies.md) for translation guidance.
-- **Respect project conventions.** Suggestions should follow the target project's existing code style, language, and architecture patterns.
-- **Be specific.** Generic advice like "implement context management" is not useful. Point to specific files, functions, and code patterns.
+### Step 1: 加载改造方案
+
+用 Glob 找到最新的 `docs/*-cc-migration-plan.md`，读取并提取所有改造项。每个改造项应包含：
+- 对应 CC 模式
+- 当前状态（partial / missing）
+- 目标实现
+- 涉及文件
+- 具体步骤
+- 优先级和复杂度
+
+### Step 2: 按优先级排序
+
+按 HIGH → MED → LOW 排序，同优先级内按复杂度 S → M → L 排序。
+
+### Step 3: 逐项执行
+
+对每个改造项：
+
+1. **展示当前改造项** — 告诉用户正在执行哪项改造
+2. **读取涉及文件** — 理解现有代码
+3. **执行改造** — 按方案中的具体步骤修改代码
+4. **汇报结果** — 展示修改了什么，改了哪些文件
+5. **用户确认** — 等待用户确认后再执行下一项
+
+### Step 4: 更新方案文档
+
+每完成一项，在当前使用的 migration plan 文档中标记为已完成（在改造项标题后加 ✅）。
+
+### Step 5: 输出总结
+
+```
+CC Apply 完成！
+  执行改造项:   X / Y
+  修改文件:     N 个
+  建议下一步:   运行 /cc-verify 验证改造效果
+```
+
+## 执行参考
+
+API 格式转换和模式级别的应用策略，参见 [references/migration-strategies.md](references/migration-strategies.md)。
+
+## 关键原则
+
+- **纯执行层** — 不做分析，不质疑方案，按方案执行
+- **逐项确认** — 每项改造完成后等待用户确认
+- **尊重现有代码** — 遵循项目的代码风格和架构模式
+- **可回退** — 每项改造应该是独立可回退的
+- **如遇阻塞** — 如果某项改造无法执行（代码已变更、依赖缺失等），跳过并告知用户原因

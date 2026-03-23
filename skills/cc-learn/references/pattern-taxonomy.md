@@ -1,6 +1,6 @@
 # Pattern Taxonomy
 
-Reference for classifying discovered patterns into topic files. Use this as a guide — if a pattern doesn't fit any category, create a note about it and ask the user.
+Classification reference for cc-learn Phase 1 (pattern extraction from trace data). Use this as a guide when classifying extracted patterns into topic files — if a pattern doesn't fit any category, create a note about it and ask the user.
 
 ## system-prompt-design.md
 

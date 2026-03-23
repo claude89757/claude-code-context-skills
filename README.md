@@ -12,17 +12,17 @@ Claude Code is a production-grade AI coding agent with sophisticated context eng
 
 | Skill | Purpose |
 |-------|---------|
-| **cc-trace** | Capture Claude Code's real API requests using [claude-trace](https://www.npmjs.com/package/@mariozechner/claude-trace). Inspect system prompts, tools, thinking config, context management. Generate Pattern Reports. |
-| **cc-learn** | Extract patterns from cc-trace reports into a persistent, topic-based knowledge base (`docs/cc-patterns/`). Supports incremental updates across versions. |
-| **cc-apply** | Scan your agent project's code, compare against the knowledge base, and generate a Gap Report with prioritized migration suggestions. |
+| **cc-trace** | Capture Claude Code's real API requests using [claude-trace](https://www.npmjs.com/package/@mariozechner/claude-trace) and store raw trace data for analysis. |
+| **cc-learn** | Extract patterns from raw traces, compare with your project code through collaborative dialogue, and produce a detailed migration plan (`docs/YYYY-MM-DD-cc-migration-plan.md`). |
+| **cc-apply** | Execute the migration plan step by step, modifying your project code with confirmation at each step. |
 | **cc-verify** | Capture your project's runtime API traces and verify that migrated patterns are actually working — not just present in code. |
 
 ## Workflow
 
 ```
 cc-trace  →  cc-learn  →  cc-apply  →  cc-verify
-(capture)    (extract)    (analyze)    (verify)
-                             ↑            |
+(capture)    (analyze     (execute)    (verify)
+              + plan)        ↑            |
                              └────────────┘
                            (iterate on gaps)
 ```
@@ -30,7 +30,7 @@ cc-trace  →  cc-learn  →  cc-apply  →  cc-verify
 Each skill works independently. Use them together for a full learning loop, or individually as needed:
 
 - **Just curious?** Run `cc-trace` alone to see what Claude Code sends to the API.
-- **Have existing knowledge?** Skip to `cc-apply` with a knowledge base from a previous session.
+- **Have existing knowledge?** Skip to `cc-learn` with a knowledge base from a previous session to plan your migration.
 - **Already migrated?** Run `cc-verify` to confirm runtime behavior matches.
 
 ## Installation
@@ -70,33 +70,26 @@ Each skill works independently. Use them together for a full learning loop, or i
 /cc-trace
 ```
 
-This captures a real API request from the latest Claude Code version and generates a Pattern Report (`cc-trace-report-YYYY-MM-DD.md`).
+This captures a real API request from the latest Claude Code version and saves raw trace data to `docs/cc-traces/`.
 
-### 2. Build the knowledge base
+### 2. Analyze and plan migration
 
 ```bash
 /cc-learn
 ```
 
-Reads the Pattern Report and organizes findings into `docs/cc-patterns/` by topic:
-- `system-prompt-design.md`
-- `tool-engineering.md`
-- `context-management.md`
-- `thinking-reasoning.md`
-- `message-patterns.md`
-- `model-routing.md`
-- `agent-orchestration.md`
+Extracts patterns from traces, compares with your project code through collaborative dialogue, and generates a migration plan (`docs/YYYY-MM-DD-cc-migration-plan.md`) with:
+- Alignment score
+- Prioritized gaps (HIGH / MED / LOW)
+- Concrete migration steps with file references
 
-### 3. Analyze your project
+### 3. Execute migration
 
 ```bash
 /cc-apply
 ```
 
-Scans your agent codebase, compares against the knowledge base, and writes `docs/cc-alignment-report.md` with:
-- Alignment score
-- Prioritized gaps (HIGH / MED / LOW)
-- Concrete migration suggestions with file references
+Reads the migration plan and executes changes step by step, with confirmation at each step.
 
 ### 4. Verify at runtime
 
@@ -123,14 +116,14 @@ From a single Claude Code trace, you can discover patterns like:
 .claude-plugin/
   plugin.json              # Plugin metadata
 skills/
-  cc-trace/                # Trace capture & pattern extraction
+  cc-trace/                # Trace capture & raw data storage
     SKILL.md
     scripts/               # Shell scripts for capture & analysis
     references/            # Troubleshooting & version analysis guides
-  cc-learn/                # Knowledge base builder
+  cc-learn/                # Pattern analysis + project comparison + migration planning
     SKILL.md
     references/            # Pattern taxonomy
-  cc-apply/                # Gap analysis & migration
+  cc-apply/                # Migration plan execution
     SKILL.md
     references/            # API migration strategies
   cc-verify/               # Runtime verification

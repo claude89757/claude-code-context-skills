@@ -1,7 +1,7 @@
 {
   "name": "cc-context-skills",
-  "description": "Learn Claude Code's context engineering patterns and apply them to your own agent projects. Capture API traces, extract patterns, and generate migration plans.",
-  "version": "1.0.0",
+  "description": "Learn Claude Code's context engineering patterns and apply them to your own agent projects. Capture API traces, collaboratively analyze gaps, and execute migration plans.",
+  "version": "2.0.0",
   "author": {
     "name": "claude89757"
   },
