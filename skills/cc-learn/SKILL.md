@@ -1,11 +1,11 @@
 ---
 name: cc-learn
-description: "Extract context engineering patterns from Claude Code trace data, compare them against the current project's code, and collaboratively develop a detailed migration plan through interactive dialogue. Follows a brainstorming-style interaction: one question at a time, prefer multiple-choice, confirm in segments."
+description: "Extract context engineering patterns and raw examples from Claude Code trace data, compare them against the current project's code, and collaboratively develop a detailed migration plan through interactive dialogue. Follows a brainstorming-style interaction: one question at a time, prefer multiple-choice, confirm in segments."
 ---
 
 # CC Learn
 
-Extract Claude Code's context engineering patterns from raw trace data captured by cc-trace, compare them against the current project's implementation, and collaboratively develop a migration plan with the user through interactive dialogue.
+Extract Claude Code's context engineering patterns and raw reference examples from trace data captured by cc-trace, compare them against the current project's implementation, and collaboratively develop a migration plan with the user through interactive dialogue.
 
 For data path and format conventions, see [../shared/data-contracts.md](../shared/data-contracts.md).
 
@@ -18,21 +18,23 @@ Do not suggest running /cc-apply until the migration plan is confirmed by the us
 You must create a task for each of the following steps and complete them in order:
 
 1. **[Phase 1] Load trace data** — Read raw JSONL from docs/cc-context/traces/
-2. **[Phase 1] Extract CC patterns** — Analyze traces with jq, write patterns to knowledge base
-3. **[Phase 2] Explore project context** — Scan the current project's agent-related code
-4. **[Phase 2] Clarifying questions** — One question at a time, understand architecture intent, constraints, priorities
-5. **[Phase 3] Item-by-item comparison** — CC patterns vs project status, mark each pattern's state
-6. **[Phase 4] Propose 2-3 migration directions** — With trade-off analysis and recommendation
-7. **[Phase 5] Present migration plan** — Show in segments, confirm each segment before continuing
-8. **[Phase 5] Write plan document** — Save to docs/cc-context/YYYY-MM-DD-migration-plan.md, set status to draft
-9. **[Phase 5] User review** — Update status to confirmed after user approval, then suggest running /cc-apply
+2. **[Phase 1] Extract CC patterns** — Analyze traces with jq, write pattern summaries to knowledge/patterns/
+3. **[Phase 1] Extract raw examples** — Extract raw artifacts from traces to knowledge/examples/YYYY-MM-DD-v\<version\>/
+4. **[Phase 2] Explore project context** — Scan the current project's agent-related code
+5. **[Phase 2] Clarifying questions** — One question at a time, understand architecture intent, constraints, priorities
+6. **[Phase 3] Item-by-item comparison** — CC patterns vs project status, mark each pattern's state
+7. **[Phase 4] Propose 2-3 migration directions** — With trade-off analysis and recommendation
+8. **[Phase 5] Present migration plan** — Show in segments, confirm each segment before continuing
+9. **[Phase 5] Write plan document** — Save to docs/cc-context/plans/YYYY-MM-DD-migration-plan.md, set status to draft
+10. **[Phase 5] User review** — Update status to confirmed after user approval, then suggest running /cc-apply
 
 ## Flowchart
 
 ```dot
 digraph cc_learn {
     "Load trace data" [shape=box];
-    "Extract CC patterns → knowledge base" [shape=box];
+    "Extract CC patterns → knowledge/patterns/" [shape=box];
+    "Extract raw examples → knowledge/examples/" [shape=box];
     "Explore project context" [shape=box];
     "Clarifying questions (one at a time)" [shape=box];
     "Sufficient understanding?" [shape=diamond];
@@ -45,8 +47,9 @@ digraph cc_learn {
     "Update status: confirmed" [shape=box];
     "Suggest running /cc-apply" [shape=doublecircle];
 
-    "Load trace data" -> "Extract CC patterns → knowledge base";
-    "Extract CC patterns → knowledge base" -> "Explore project context";
+    "Load trace data" -> "Extract CC patterns → knowledge/patterns/";
+    "Extract CC patterns → knowledge/patterns/" -> "Extract raw examples → knowledge/examples/";
+    "Extract raw examples → knowledge/examples/" -> "Explore project context";
     "Explore project context" -> "Clarifying questions (one at a time)";
     "Clarifying questions (one at a time)" -> "Sufficient understanding?";
     "Sufficient understanding?" -> "Clarifying questions (one at a time)" [label="No, continue asking"];
@@ -65,7 +68,7 @@ digraph cc_learn {
 
 **The terminal state is suggesting /cc-apply.** Do not start modifying code directly.
 
-## Phase 1: Load and Extract
+## Phase 1: Load, Extract Patterns, and Extract Examples
 
 ### Input Sources
 
@@ -91,21 +94,11 @@ Extract for each category (use the LLM filter and jq commands from the trace ins
 - **Message patterns**: system-reminder injection, role distribution
 - **Model routing**: model selection, max_tokens settings
 
-### Knowledge Base
+### Pattern Summaries → knowledge/patterns/
 
-Write extracted patterns to `docs/cc-context/patterns/` knowledge base, organized by topic:
+Write extracted pattern summaries to `docs/cc-context/knowledge/patterns/`, organized by topic. Files are created on demand — only when relevant patterns are found.
 
-| File | Topic |
-|------|-------|
-| `system-prompt-design.md` | System prompt layering, block organization, cache_control placement |
-| `tool-engineering.md` | Tool definitions, naming conventions, parameter schemas, deferred tools |
-| `context-management.md` | Context compression, message trimming, context_management API |
-| `agent-orchestration.md` | Subagent patterns, Agent tool design, parallel dispatch |
-| `thinking-reasoning.md` | thinking config, budget_tokens, effort control |
-| `message-patterns.md` | system-reminder injection, role management, tool call patterns |
-| `model-routing.md` | Model selection, max_tokens settings, model switching |
-
-Only create a file when relevant patterns are found.
+For classification reference, see [references/pattern-taxonomy.md](references/pattern-taxonomy.md).
 
 #### Pattern Entry Format
 
@@ -113,9 +106,9 @@ Only create a file when relevant patterns are found.
 ### <Pattern Name>
 
 - **CC approach**: Specific description of observed behavior
-- **Evidence**: Key trace data excerpt (concise)
+- **Evidence**: See [examples/YYYY-MM-DD-v<version>/<file>](../examples/YYYY-MM-DD-v<version>/<file>)
 - **Rationale**: Design reasoning
-- **Source**: CC version, trace date
+- **Source**: CC v<version>, YYYY-MM-DD
 
 ---
 ```
@@ -127,17 +120,36 @@ Only create a file when relevant patterns are found.
 - Each pattern tracks its source version
 - If a new trace contradicts an existing pattern, flag the conflict and ask the user
 
+### Raw Examples → knowledge/examples/
+
+Extract raw artifacts from the JSONL trace into `docs/cc-context/knowledge/examples/YYYY-MM-DD-v<version>/` (matching the trace's version directory name).
+
+| Output File | Content | Source in JSONL |
+|-------------|---------|-----------------|
+| `system-prompt-full.md` | Complete system prompt text; all blocks separated by `---` with cache_control annotations | `.request.body.system[]` |
+| `tool-definitions/<ToolName>.json` | Individual tool definition with full input_schema; one file per unique tool | `.request.body.tools[]` |
+| `thinking-configs.md` | All unique thinking/effort configurations with request context | `.request.body.thinking`, `.output_config` |
+| `context-management.md` | All unique context_management configurations | `.request.body.context_management` |
+| `system-reminders.md` | All `<system-reminder>` injected content extracted from user messages | User messages containing system-reminder tags |
+| `deferred-tools.md` | All deferred tools declarations | Messages containing available-deferred-tools |
+| `first-turn.json` | Complete first LLM request body (system, messages, tools, config) | First request matching `v1/messages` |
+| `model-routing.md` | Per-request summary: model, max_tokens, thinking config, effort | `.request.body.model`, `.max_tokens` |
+
+### Extraction Summary
+
 After extraction, show a summary to the user:
 
 ```
-Pattern extraction complete!
-  New patterns:      X
-  Updated patterns:  Y
-  Unchanged:         Z
-  Knowledge base:    docs/cc-context/patterns/
+Extraction complete!
+  Patterns:
+    New:        X
+    Updated:    Y
+    Unchanged:  Z
+    Location:   docs/cc-context/knowledge/patterns/
+  Examples:
+    Files:      N
+    Location:   docs/cc-context/knowledge/examples/YYYY-MM-DD-v<version>/
 ```
-
-For classification reference, see [references/pattern-taxonomy.md](references/pattern-taxonomy.md).
 
 ## Phase 2: Explore and Clarify
 
@@ -195,7 +207,7 @@ For each pattern in the knowledge base, assess the project's current state:
 
 For `partially-implemented` and `missing` patterns, record:
 - **Current state**: How the project currently handles this (with file paths)
-- **CC approach**: How Claude Code handles this
+- **CC approach**: How Claude Code handles this (link to examples)
 - **Gap**: What specifically is missing
 - **Priority**: HIGH / MED / LOW
 - **Complexity**: S / M / L
@@ -225,11 +237,12 @@ After the user selects a direction, **present the detailed plan in segments**:
 - Each segment covers one topic (e.g., system prompt, tool design, etc.)
 - Ask for user confirmation after each segment
 - Include specific file paths, modification points, and code examples
+- Reference relevant examples from knowledge/examples/ for concrete guidance
 - User can request adjustments before continuing
 
 ### Write Plan Document
 
-After all segments are confirmed, write to `docs/cc-context/YYYY-MM-DD-migration-plan.md` (date prefix for archival sorting).
+After all segments are confirmed, write to `docs/cc-context/plans/YYYY-MM-DD-migration-plan.md` (date prefix for archival sorting).
 
 **Note: Initial status must be set to `draft`. Only update to `confirmed` after user approval.**
 
@@ -238,7 +251,8 @@ After all segments are confirmed, write to `docs/cc-context/YYYY-MM-DD-migration
 
 status: draft
 Generated: YYYY-MM-DD
-Knowledge base: docs/cc-context/patterns/
+Knowledge base: docs/cc-context/knowledge/patterns/
+Reference examples: docs/cc-context/knowledge/examples/
 Target project: <project root>
 
 ## Overview
@@ -246,7 +260,7 @@ Target project: <project root>
 | Status | Count |
 |--------|-------|
 | Implemented | X |
-| Partial | Y |
+| Partially implemented | Y |
 | Missing | Z |
 | Not applicable | W |
 
@@ -261,6 +275,7 @@ Alignment: X / (X + Y + Z) = XX%
 ### 1. <Item Name>
 
 - **CC pattern**: <pattern name>
+- **Reference example**: [examples/YYYY-MM-DD-v<version>/<file>](../knowledge/examples/YYYY-MM-DD-v<version>/<file>)
 - **Current status**: <partially-implemented / missing>
 - **Current implementation**: <how the project currently handles this>
 - **Target implementation**: <desired state after migration>
@@ -286,7 +301,7 @@ Alignment: X / (X + Y + Z) = XX%
 
 After the document is written, prompt:
 
-> Plan saved to `docs/cc-context/YYYY-MM-DD-migration-plan.md` (current status: draft). Please review the plan.
+> Plan saved to `docs/cc-context/plans/YYYY-MM-DD-migration-plan.md` (current status: draft). Please review the plan.
 
 Wait for user confirmation. If changes are needed, update the document.
 
@@ -302,6 +317,7 @@ Wait for user confirmation. If changes are needed, update the document.
 - **Confirm in segments** — Never output the entire plan at once
 - **Hard gate** — Do not proceed to cc-apply without confirmation
 - **Status-driven** — draft → confirmed state transition ensures process integrity
+- **Examples as evidence** — Pattern entries link to raw examples, migration items reference concrete artifacts
 - **No framework assumptions** — Analyze actual code, do not assume specific frameworks
 - **API format-aware** — Support both Anthropic and OpenAI formats
 - **Respect project conventions** — Follow the project's existing code style

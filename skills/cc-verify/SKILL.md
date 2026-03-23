@@ -13,16 +13,18 @@ For data path and format conventions, see [../shared/data-contracts.md](../share
 
 ## Prerequisites
 
-1. A `docs/cc-context/patterns/` knowledge base must exist (created by `/cc-learn`)
+1. A `docs/cc-context/knowledge/patterns/` knowledge base must exist (created by `/cc-learn`)
 2. The target project must have a way to capture its API traces
 
 ## Workflow
 
 ### Step 1: Locate Knowledge Base
 
-Use Glob to find `docs/cc-context/patterns/*.md`. If the user specifies a custom path, use that.
+Use Glob to find `docs/cc-context/knowledge/patterns/*.md`. If the user specifies a custom path, use that.
 
 If not found, tell the user to run `/cc-learn` first.
+
+Also check for reference examples at `docs/cc-context/knowledge/examples/` — these can aid in understanding expected behavior.
 
 ### Step 2: Obtain Target Project Traces
 
@@ -79,7 +81,7 @@ Handle API format differences:
 
 ### Step 4: Pattern-by-Pattern Verification
 
-For each pattern in the knowledge base, check the trace data:
+For each pattern in the knowledge base, check the trace data. Where available, compare against reference examples from `docs/cc-context/knowledge/examples/` for precise behavioral matching.
 
 | Verification Status | Meaning |
 |---------------------|---------|
@@ -118,13 +120,14 @@ For detailed verification criteria, see [references/verification-criteria.md](re
 
 ### Step 5: Generate Verification Report
 
-Write to `docs/cc-context/YYYY-MM-DD-verification-report.md` (use today's date). Create `docs/cc-context/` if needed. If a report with the same date already exists, overwrite it (the latest run is authoritative).
+Write to `docs/cc-context/reports/YYYY-MM-DD-verification-report.md` (use today's date). Create `docs/cc-context/reports/` if needed. If a report with the same date already exists, overwrite it (the latest run is authoritative).
 
 ```markdown
 # CC Verification Report
 
 Generated: YYYY-MM-DD
-Knowledge base: docs/cc-context/patterns/
+Knowledge base: docs/cc-context/knowledge/patterns/
+Reference examples: docs/cc-context/knowledge/examples/
 Trace source: <file path or capture method>
 Requests analyzed: N
 
@@ -169,7 +172,7 @@ Patterns that could not be verified — may need additional test scenarios:
 
 ### Step 6: Cross-reference with Migration Plan
 
-Use Glob to find all `docs/cc-context/*-migration-plan.md` files. Sort matches lexicographically and pick the last one (most recent date). If found, cross-reference:
+Use Glob to find all `docs/cc-context/plans/*-migration-plan.md` files. Sort matches lexicographically and pick the last one (most recent date). If found, cross-reference:
 
 - Items marked ✅ in the migration plan but **NOT** confirmed at runtime → **false positive** (cc-apply execution issue). Update the marker to ⚠️.
 - Items confirmed at runtime but **NOT** in the migration plan → project already implemented these patterns independently (no action needed).
@@ -189,7 +192,7 @@ CC Verify complete!
   Partially confirmed/Diverged: Y patterns
   Not observed:          Z patterns
   Behavioral alignment:  XX%
-  Report:                docs/cc-context/YYYY-MM-DD-verification-report.md
+  Report:                docs/cc-context/reports/YYYY-MM-DD-verification-report.md
 ```
 
 If there are partially-confirmed/diverged patterns, suggest: "Run `/cc-learn` to update the plan, then run `/cc-apply` to re-execute."
@@ -200,5 +203,6 @@ If many patterns are "not observed", suggest running more diverse test scenarios
 
 - **Runtime data is essential** — Static code analysis (cc-apply) and runtime verification (cc-verify) serve different purposes. Code that looks correct may not behave correctly at runtime.
 - **More traces = better verification** — A single API request may not cover all patterns. Encourage users to capture traces from diverse scenarios (simple queries, complex multi-turn tasks, tool-heavy operations).
+- **Example-informed verification** — Use reference examples from knowledge/examples/ to understand exact expected behavior.
 - **Format-agnostic** — Support both Anthropic and OpenAI API formats. Comparison is at the pattern level, not the API field level.
 - **Close the loop** — Verification results are written back to the migration plan, ensuring the feedback loop is truly closed.

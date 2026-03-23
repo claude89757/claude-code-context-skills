@@ -10,30 +10,39 @@ docs/cc-context/
 │   └── YYYY-MM-DD-v<version>/
 │       ├── trace.jsonl                  # Raw trace data
 │       └── metadata.json               # Capture metadata
-├── patterns/                            # cc-learn output (knowledge base)
-│   ├── system-prompt-design.md
-│   ├── tool-engineering.md
-│   ├── context-management.md
-│   ├── agent-orchestration.md
-│   ├── thinking-reasoning.md
-│   ├── message-patterns.md
-│   └── model-routing.md
-├── YYYY-MM-DD-migration-plan.md         # cc-learn output → cc-apply input
-└── YYYY-MM-DD-verification-report.md    # cc-verify output
+├── knowledge/                           # cc-learn output
+│   ├── patterns/                        # Cross-version evolved summaries
+│   │   └── <topic>.md                  # Created on demand per pattern-taxonomy.md
+│   └── examples/                        # Per-version raw artifacts
+│       └── YYYY-MM-DD-v<version>/
+│           ├── system-prompt-full.md
+│           ├── tool-definitions/
+│           │   └── <ToolName>.json
+│           ├── thinking-configs.md
+│           ├── context-management.md
+│           ├── system-reminders.md
+│           ├── deferred-tools.md
+│           ├── first-turn.json
+│           └── model-routing.md
+├── plans/                               # Migration plans (written by cc-learn, executed by cc-apply)
+│   └── YYYY-MM-DD-migration-plan.md
+└── reports/                             # Verification reports (cc-verify)
+    └── YYYY-MM-DD-verification-report.md
 ```
 
 ## Data Flow
 
 ```
-cc-trace ──→ traces/*/trace.jsonl ──→ cc-learn ──→ patterns/*.md
+cc-trace ──→ traces/*/trace.jsonl ──→ cc-learn ──→ knowledge/patterns/*.md
+                                         │              knowledge/examples/*/
                                          │
-                                         └──→ migration-plan.md ──→ cc-apply
-                                                     │                  │
-                                                     ←── ✅ marks ──────┘
-                                                     │
-                                             cc-verify ──→ verification-report.md
-                                                 │
-                                                 └──→ write back to migration-plan (⚠️ marks)
+                                         └──→ plans/migration-plan.md ──→ cc-apply
+                                                        │                    │
+                                                        ←── ✅ marks ────────┘
+                                                        │
+                                                cc-verify ──→ reports/verification-report.md
+                                                    │
+                                                    └──→ write back to plans/ (⚠️ marks)
 ```
 
 ## Migration Plan Status
@@ -62,9 +71,10 @@ The migration-plan.md must include a status line near the top of the document:
 | Purpose | Pattern |
 |---------|---------|
 | Latest trace directory | `docs/cc-context/traces/*/trace.jsonl` |
-| Knowledge base files | `docs/cc-context/patterns/*.md` |
-| Migration plan | `docs/cc-context/*-migration-plan.md` |
-| Verification report | `docs/cc-context/*-verification-report.md` |
+| Knowledge base patterns | `docs/cc-context/knowledge/patterns/*.md` |
+| Knowledge base examples | `docs/cc-context/knowledge/examples/*/` |
+| Migration plan | `docs/cc-context/plans/*-migration-plan.md` |
+| Verification report | `docs/cc-context/reports/*-verification-report.md` |
 
 ## metadata.json Format
 
@@ -77,3 +87,18 @@ The migration-plan.md must include a status line near the top of the document:
   "prompt_used": "hello"
 }
 ```
+
+## Example Files Reference
+
+The following files are extracted by cc-learn from raw JSONL traces into `knowledge/examples/YYYY-MM-DD-v<version>/`:
+
+| File | Content | Source in JSONL |
+|------|---------|-----------------|
+| `system-prompt-full.md` | Complete system prompt text, blocks separated by `---` | `.request.body.system[]` |
+| `tool-definitions/<Name>.json` | Individual tool definition with full schema | `.request.body.tools[]` |
+| `thinking-configs.md` | All unique thinking/effort configs with request context | `.request.body.thinking`, `.output_config` |
+| `context-management.md` | Context management configurations | `.request.body.context_management` |
+| `system-reminders.md` | All `<system-reminder>` injected content | User messages containing system-reminder tags |
+| `deferred-tools.md` | Deferred tools declarations | Messages containing available-deferred-tools |
+| `first-turn.json` | Complete first LLM request body | First request matching `v1/messages` |
+| `model-routing.md` | Per-request model + max_tokens summary | `.request.body.model`, `.max_tokens` |

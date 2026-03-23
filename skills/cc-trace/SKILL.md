@@ -5,7 +5,7 @@ description: "Capture and store Claude Code's real API requests using claude-tra
 
 # CC Trace
 
-Use `claude-trace` (`@mariozechner/claude-trace`) to capture the exact API requests Claude Code sends to the Anthropic API, then store raw trace data to the project directory. This skill only captures and stores — pattern analysis is done by `/cc-learn`.
+Use `claude-trace` (`@mariozechner/claude-trace`) to capture the exact API requests Claude Code sends to the Anthropic API, then store raw trace data to the project directory. This skill only captures and stores — pattern extraction and example curation are done by `/cc-learn`.
 
 > **Native binary vs npm.** Since Claude Code v2.x, the system `claude` binary is a compiled native executable. `claude-trace` works by monkey-patching Node.js `fetch`, so it cannot intercept native binaries. All scripts use `npm install @anthropic-ai/claude-code@<version>` and pass `--claude-path` to `claude-trace`.
 
@@ -76,4 +76,4 @@ After capture, you can use jq to quickly verify data integrity. See [../shared/t
 
 ## Next Step
 
-After capture and storage are complete, run `/cc-learn` to extract and analyze patterns from the raw trace data.
+After capture and storage are complete, run `/cc-learn` to extract patterns and raw examples from the trace data.
