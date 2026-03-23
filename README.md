@@ -13,7 +13,7 @@ Claude Code is a production-grade AI coding agent with sophisticated context eng
 | Skill | Purpose |
 |-------|---------|
 | **cc-trace** | Capture Claude Code's real API requests using [claude-trace](https://www.npmjs.com/package/@mariozechner/claude-trace) and store raw trace data for analysis. |
-| **cc-learn** | Extract patterns from raw traces, compare with your project code through collaborative dialogue, and produce a detailed migration plan (`docs/cc-context/YYYY-MM-DD-migration-plan.md`). |
+| **cc-learn** | Extract patterns and raw examples from traces, compare with your project code through collaborative dialogue, and produce a detailed migration plan (`docs/cc-context/plans/YYYY-MM-DD-migration-plan.md`). |
 | **cc-apply** | Execute the migration plan step by step, modifying your project code with confirmation at each step. |
 | **cc-verify** | Capture your project's runtime API traces and verify that migrated patterns are actually working — not just present in code. |
 
@@ -78,7 +78,7 @@ This captures a real API request from the latest Claude Code version and saves r
 /cc-learn
 ```
 
-Extracts patterns from traces, compares with your project code through collaborative dialogue, and generates a migration plan (`docs/cc-context/YYYY-MM-DD-migration-plan.md`) with:
+Extracts patterns and raw reference examples from traces, compares with your project code through collaborative dialogue, and generates a migration plan (`docs/cc-context/plans/YYYY-MM-DD-migration-plan.md`) with:
 - Alignment score
 - Prioritized gaps (HIGH / MED / LOW)
 - Concrete migration steps with file references
@@ -120,7 +120,7 @@ skills/
     SKILL.md
     scripts/               # Shell scripts for capture & analysis
     references/            # Troubleshooting & version analysis guides
-  cc-learn/                # Pattern analysis + project comparison + migration planning
+  cc-learn/                # Pattern extraction + example curation + migration planning
     SKILL.md
     references/            # Pattern taxonomy
   cc-apply/                # Migration plan execution
@@ -129,6 +129,9 @@ skills/
   cc-verify/               # Runtime verification
     SKILL.md
     references/            # Verification criteria
+  shared/                  # Cross-skill references
+    data-contracts.md      # Inter-skill data paths & format conventions
+    trace-inspection.md    # Shared jq inspection commands
 ```
 
 ## License
