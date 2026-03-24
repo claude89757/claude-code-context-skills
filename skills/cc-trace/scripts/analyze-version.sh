@@ -9,6 +9,7 @@
 #   prompt       - Prompt to send to Claude Code (optional, defaults to "hello")
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 VERSION="${1:?Usage: $0 <version> [project_dir] [prompt]}"
 PROJECT_DIR="${2:-}"
 PROMPT="${3:-hello}"
@@ -99,6 +100,10 @@ if [ -n "$PROJECT_DIR" ] && [ -n "$TRACE_FILE" ] && [ -s "$TRACE_FILE" ]; then
 }
 METAEOF
   echo "✓ Saved to $SAVE_DIR"
+
+  # Auto-extract system prompt
+  bash "$SCRIPT_DIR/extract-system-prompt.sh" "$SAVE_DIR/trace.jsonl" "$VERSION" "$PROJECT_DIR" 2>&1 || \
+    echo "⚠ System prompt extraction skipped (non-fatal)"
 elif [ -z "$PROJECT_DIR" ] && [ -n "$TRACE_FILE" ] && [ -s "$TRACE_FILE" ]; then
   echo ""
   echo "Note: Trace not saved to project directory. Pass project dir as second argument to save:"

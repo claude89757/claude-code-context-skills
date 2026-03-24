@@ -14,8 +14,8 @@ All `scripts/` paths below are relative to this skill's directory.
 For data path and format conventions, see [../../data-contracts.md](../../data-contracts.md).
 
 <OUTPUT-BOUNDARY>
-This skill ONLY writes to `docs/cc-context/traces/`.
-It does NOT write to `docs/cc-context/knowledge/`, `docs/cc-context/plans/`, or `docs/cc-context/reports/`.
+This skill ONLY writes to `docs/cc-context/traces/` and `docs/cc-context/knowledge/examples/`.
+It does NOT write to `docs/cc-context/plans/` or `docs/cc-context/reports/`.
 It does NOT modify project source code.
 </OUTPUT-BOUNDARY>
 
@@ -55,13 +55,17 @@ See [references/version-analysis.md](references/version-analysis.md) for details
 
 ## Storage Structure
 
-After capture, scripts automatically save trace data to the user's working directory:
+After capture, scripts automatically save trace data and extracted artifacts:
 
 ```
-docs/cc-context/traces/
-└── YYYY-MM-DD-v<version>/
-    ├── trace.jsonl      # Raw trace data
-    └── metadata.json    # Capture metadata
+docs/cc-context/
+├── traces/
+│   └── YYYY-MM-DD-v<version>/
+│       ├── trace.jsonl      # Raw trace data
+│       └── metadata.json    # Capture metadata
+└── knowledge/examples/
+    └── YYYY-MM-DD-v<version>/
+        └── cc-system-prompt.md   # Extracted system prompt (auto-generated)
 ```
 
 ### metadata.json Format
@@ -75,6 +79,16 @@ docs/cc-context/traces/
   "prompt_used": "hello"
 }
 ```
+
+## Extract System Prompt (Standalone)
+
+Re-extract from an existing trace file (useful for historical traces):
+
+```bash
+bash scripts/extract-system-prompt.sh <trace.jsonl> <version> [project_dir]
+```
+
+Output: `docs/cc-context/knowledge/examples/YYYY-MM-DD-v<version>/cc-system-prompt.md` — clean markdown with frontmatter (version, capture_date, char_count), no block markers.
 
 ## Quick Check (Optional)
 
